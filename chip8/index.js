@@ -1,5 +1,7 @@
-const FPS = 120;
-const SIZE = 64;
+import loader from 'https://cdn.jsdelivr.net/npm/@assemblyscript/loader/index.js';
+
+const FPS = 1;
+const SIZE = 32;
 
 const [canvas] = document.getElementsByTagName('canvas');
 const context = canvas.getContext('2d');
@@ -8,19 +10,16 @@ canvas.width = SIZE;
 canvas.height = SIZE;
 
 async function main () {
-    const { instance } = await WebAssembly.instantiateStreaming(fetch('cpu.wasm'));
+    const instance = await loader.instantiate(fetch('dist/chip8.wasm'));
     console.log(instance.exports);
-    // Load ROM
-    const rom = new Uint16Array(instance.exports.memory.buffer, instance.exports.rom.value, 4096);
-    console.log(rom);
-    
+
     // Read memory as RGBA format
-    const data = new Uint8ClampedArray(instance.exports.memory.buffer, instance.exports.map.value, SIZE * SIZE * 4);
+    const data = instance.exports.__getUint8ClampedArrayView(instance.exports.map.value);
     console.log(data);
-    
+
     setInterval(() => {
-        // Put next pixel
         instance.exports.tick();
+        console.log(data);
         requestAnimationFrame(() => {
             context.putImageData(new ImageData(data, SIZE, SIZE), 0, 0);
         });
@@ -28,3 +27,5 @@ async function main () {
 }
 
 main().catch(console.error);
+
+console.log(window);
