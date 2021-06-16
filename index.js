@@ -15,11 +15,7 @@ function hex (num) {
 
 async function main () {
     const instance = await loader.instantiate(fetch('dist/chip8.wasm'));
-    console.log(instance.exports);
-
-    // Read memory as RGBA format
     const ram = instance.exports.__getUint8ArrayView(instance.exports.ram.value);
-    console.log(ram);
 
     input.addEventListener('change', async (e) => {
         const [file] = e.target.files;
@@ -31,6 +27,9 @@ async function main () {
             console.log(index, hex(byte));
             ram[0x200 + index] = byte;
         }
+
+        // Initialize emulator
+        instance.exports.init();
 
         setInterval(() => {
             console.log(

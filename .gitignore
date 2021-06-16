@@ -1,3 +1,9 @@
 .vscode/
 node_modules/
+target/
 *.wasm
+Cargo.lock
+
+# Added by cargo
+
+/target

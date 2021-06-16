@@ -8,6 +8,12 @@ export function tick (): void {
     cpu.cycle();
 }
 
+export function init (): void {
+    ram.fill(0);
+    // TODO load fontset
+    cpu.reset();
+}
+
 export function draw (): void {
     display.draw(0, 0, true);
 }
