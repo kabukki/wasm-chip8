@@ -1,9 +1,6 @@
 .vscode/
 node_modules/
 target/
+pkg/
 *.wasm
-Cargo.lock
-
-# Added by cargo
-
-/target
+.DS_Store

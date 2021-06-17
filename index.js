@@ -1,4 +1,4 @@
-import loader from 'https://cdn.jsdelivr.net/npm/@assemblyscript/loader/index.js';
+import init, { Cpu } from './pkg/chip8.js';
 
 const cyclesPerSecond = 1;
 
@@ -14,29 +14,21 @@ function hex (num) {
 }
 
 async function main () {
-    const instance = await loader.instantiate(fetch('dist/chip8.wasm'));
-    const ram = instance.exports.__getUint8ArrayView(instance.exports.ram.value);
+    // Initialize emulator
+    await init();
+    console.log('Initialized');
 
     input.addEventListener('change', async (e) => {
         const [file] = e.target.files;
         const buffer = await file.arrayBuffer();
         const rom = new Uint8Array(buffer);
-        // Write ROM to emulator memory
-        // Program ROM should be written @ 0x200
-        for (const [index, byte] of rom.entries()) {
-            console.log(index, hex(byte));
-            ram[0x200 + index] = byte;
-        }
 
-        // Initialize emulator
-        instance.exports.init();
+        const cpu = Cpu.new(rom);
+        console.log(cpu);
 
         setInterval(() => {
-            console.log(
-                hex(instance.exports.currentPC()),
-                hex(instance.exports.currentInstruction())
-            );
-            instance.exports.tick();
+            const insruction = cpu.cycle();
+            console.log(hex(insruction.opcode));
             // requestAnimationFrame(() => {
             //     context.putImageData(new ImageData(data, 64, 32), 0, 0);
             // });
