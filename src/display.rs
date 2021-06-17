@@ -1,18 +1,49 @@
+pub const DISPLAY_WIDTH: usize = 64;
+pub const DISPLAY_HEIGHT: usize = 32;
+pub const VRAM_SIZE: usize = DISPLAY_WIDTH * DISPLAY_HEIGHT;
+
+pub const FONT_SET: [u8; 80] = [ 
+  0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+  0x20, 0x60, 0x20, 0x20, 0x70, // 1
+  0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+  0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+  0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+  0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+  0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+  0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+  0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+  0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+  0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+  0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+  0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+  0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+  0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+  0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+];
+
 pub struct Display {
-    // Framebuffer should be written to memory at addresses 0xF00 - 0xFFF
-    framebuffer: [u8; 64 * 32],
+    /**
+     * Framebuffer should be written to memory at addresses 0xF00 - 0xFFF
+     */
+    pub framebuffer: [bool; VRAM_SIZE],
 }
 
 impl Display {
-    fn draw (&mut self, x: u8, y: u8, on: bool) {
-        self.framebuffer[(x + y * 64) as usize] = if (on) { 1 } else { 0 };
+    pub fn new () -> Display {
+        return Display {
+            framebuffer: [false; 64 * 32], 
+        };
     }
 
-    fn clear (&mut self) {
-        self.framebuffer = [0; 64 * 32];
+    pub fn draw (&mut self, x: usize, y: usize, on: bool) {
+        self.framebuffer[x + y * DISPLAY_WIDTH] = on;
+    }
+
+    pub fn clear (&mut self) {
+        self.framebuffer = [false; VRAM_SIZE];
+    }
+
+    pub fn size (&self) -> usize {
+        return self.framebuffer.len();
     }
 }
-
-pub static DISPLAY: Display = Display {
-    framebuffer: [0; 64 * 32], 
-};

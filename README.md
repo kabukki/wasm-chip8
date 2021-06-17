@@ -6,7 +6,7 @@
 
 - http://en.wikipedia.org/wiki/CHIP-8
 - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
-- https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
+- https://github.com/mattmikolay/chip-8/wiki/CHIP%E2%80%908-Technical-Reference
 
 ### Tooling
 
@@ -20,3 +20,5 @@
 - https://github.com/letmaik/chip8
 - https://github.com/ColinEberhardt/wasm-rust-chip8
 - https://github.com/LucasHill/chip8-rust-wasm
+- https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
+- https://rustwasm.github.io/docs/book/

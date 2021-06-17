@@ -1,5 +1,7 @@
 use wasm_bindgen::prelude::*;
+
 use crate::ram;
+use crate::display;
 use rand::Rng;
 
 #[wasm_bindgen]
@@ -40,6 +42,7 @@ pub struct Cpu {
     st: u8,
 
     memory: [u8; ram::MEMORY_SIZE],
+    display: display::Display,
     rand: rand::rngs::ThreadRng,
 }
 
@@ -47,9 +50,11 @@ pub struct Cpu {
 impl Cpu {
     pub fn new (rom: &[u8]) -> Cpu {
         let mut memory = [0; ram::MEMORY_SIZE];
-        
-        // Initialize memory
-        memory[ram::PROGRAM_START..ram::PROGRAM_START + rom.len()].copy_from_slice(rom);
+
+        // Store font sprites
+        memory[ram::RESERVED_START .. ram::RESERVED_START + display::FONT_SET.len()].copy_from_slice(&display::FONT_SET);
+        // Load ROM into memory
+        memory[ram::PROGRAM_START .. ram::PROGRAM_START + rom.len()].copy_from_slice(&rom);
 
         return Cpu {
             v: [0; 16],
@@ -60,11 +65,12 @@ impl Cpu {
             dt: 0,
             st: 0,
             memory,
+            display: display::Display::new(),
             rand: rand::thread_rng(),
         };
     }
     
-    pub fn cycle (&mut self) -> Instruction{
+    pub fn tick (&mut self) -> Instruction{
         if (self.dt > 0) {
             self.dt -= 1;
         }
@@ -77,7 +83,7 @@ impl Cpu {
         }
 
         let instruction = Instruction::new(
-            (self.memory[self.pc as usize] as u16) << 8 | (self.memory[self.pc as usize + 1] as u16)
+            (self.memory[self.pc as usize] as u16) << 8 |(self.memory[self.pc as usize + 1] as u16)
         );
 
         self.execute(&instruction);
@@ -86,7 +92,6 @@ impl Cpu {
     }
 
     pub fn execute (&mut self, instruction: &Instruction) {
-        print!("{:#0x} ", instruction.opcode);
         let nibbles = (
             (instruction.opcode & 0xF000) >> 12,
             (instruction.opcode & 0x0F00) >> 8,
@@ -95,68 +100,54 @@ impl Cpu {
         );
 
         match nibbles {
-            // CLS
             (0, 0, 0xE, 0) => {
-                println!("CLS");
                 // display.clear();
                 self.pc += 2;
             },
-            // CALL
             (0x2, ..) => {
-                println!("CALL {:#0x}", instruction.addr);
                 self.sp += 1;
                 self.stack[self.sp as usize] = self.pc;
                 self.pc = instruction.addr;
             },
-            // JP
             (0x1, ..) => {
-                println!("JP {:#0x}", instruction.addr);
                 self.pc = instruction.addr;     
             },
-            // SNE
             (0x4, ..) => {
-                println!("SNE");
                 if (self.v[instruction.x as usize] != instruction.byte) {
                     self.pc += 2;
                 }
             },
-            // LD Vx, byte
             (0x6, ..) => {
-                println!("LD V{}, {}", instruction.x, instruction.byte);
                 self.v[instruction.x as usize] = instruction.byte;
                 self.pc += 2;
             },
-            // LD Vx Vy
             (0x8, .., 0) => {
-                println!("LD V{}, V{}", instruction.x, instruction.y);
                 self.v[instruction.x as usize] = self.v[instruction.y as usize];
                 self.pc += 2;
             },
-            // LDI
             (0xA, ..) => {
-                println!("LD I, {}", instruction.addr);
                 self.i = instruction.addr;   
                 self.pc += 2;
             },
-            // RND Vx, byte
             (0xC, ..) => {
-                println!("RND V{}, {}", instruction.x, instruction.byte);
                 self.v[instruction.x as usize] = self.rand.gen_range(0..255) & instruction.byte;
                 self.pc += 2;
             },
-            // LD
             (0xF, _, 0x6, 0x5) => {
-                println!("LD Vx [I]");
                 for n in 0..instruction.x {
                     self.v[n as usize] = self.memory[self.i as usize + n as usize];
                 }
                 self.pc += 2;
             },
-            // Fallback
-            (..) => {
-                println!("UNKNOWN");
-            },
+            (..) => (),
         }
+    }
+
+    /**
+     * Returns a pointer to the display framebuffer
+     */
+    pub fn get_display (&self) -> *const bool {
+        return self.display.framebuffer.as_ptr();
     }
 }
 
