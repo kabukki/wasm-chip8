@@ -1,6 +1,6 @@
 import init, { Cpu } from './pkg/chip8.js';
 
-const cyclesPerSecond = 1;
+const cyclesPerSecond = 60;
 
 const [canvas] = document.getElementsByTagName('canvas');
 const [input] = document.getElementsByTagName('input');
@@ -27,8 +27,11 @@ async function main () {
         console.log(cpu);
         
         setInterval(() => {
-            const insruction = cpu.tick();
-            console.log(hex(insruction.opcode));
+            const instruction = cpu.tick();
+            console.log(hex(instruction.opcode));
+            // if (((instruction.opcode & 0xF000) >> 12) === 0xD) {
+            //     debugger;
+            // }
 
             // View
             const data = new Uint8Array(wasm.memory.buffer, cpu.get_display(), 2048);

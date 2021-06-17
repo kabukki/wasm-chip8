@@ -21,6 +21,10 @@ pub const FONT_SET: [u8; 80] = [
   0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 ];
 
+fn at (x: usize, y: usize) -> usize {
+    return x + y * DISPLAY_WIDTH;
+}
+
 pub struct Display {
     /**
      * Framebuffer should be written to memory at addresses 0xF00 - 0xFFF
@@ -31,12 +35,37 @@ pub struct Display {
 impl Display {
     pub fn new () -> Display {
         return Display {
-            framebuffer: [false; 64 * 32], 
+            framebuffer: [false; VRAM_SIZE], 
         };
     }
 
-    pub fn draw (&mut self, x: usize, y: usize, on: bool) {
-        self.framebuffer[x + y * DISPLAY_WIDTH] = on;
+
+    pub fn draw_pixel (&mut self, x: usize, y: usize, on: bool) {
+        self.framebuffer[at(x, y)] = on;
+    }
+
+    /**
+     * Sprites are up to 15 bytes (dimensions: 8x15)
+     */
+    pub fn draw_sprite (&mut self, x: usize, y: usize, sprite: &[u8]) -> bool {
+        let mut collision = false;
+
+        for row in 0..sprite.len() {
+            for column in 0..8 {
+                let (x_actual, y_actual) = ((x + column) % DISPLAY_WIDTH, (y + row) % DISPLAY_HEIGHT);
+
+                let old = self.framebuffer[at(x_actual, y_actual)];
+                let new = (sprite[row] >> (7 - column) & 1) == 1;
+    
+                if old && !new {
+                    collision = true;
+                }
+
+                self.draw_pixel(x_actual, y_actual, old ^ new);
+            }
+        }
+
+        return collision;
     }
 
     pub fn clear (&mut self) {

@@ -22,3 +22,8 @@
 - https://github.com/LucasHill/chip8-rust-wasm
 - https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
 - https://rustwasm.github.io/docs/book/
+
+### ROMs
+
+- https://github.com/loktar00/chip8/tree/master/roms
+- https://github.com/corax89/chip8-test-rom
