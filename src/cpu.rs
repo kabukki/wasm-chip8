@@ -154,6 +154,12 @@ impl Cpu {
                 // Check for key press, or skip
                 self.pc += 2;
             },
+            (0xF, _, 0, 0x7) => {
+                self.v[instruction.x] = self.dt;
+            },
+            (0xF, _, 0x1, 0x8) => {
+                self.st = self.v[instruction.x];
+            },
             (0xF, _, 0x1, 0xE) => {
                 self.i += self.v[instruction.x] as u16;
             },
@@ -162,7 +168,8 @@ impl Cpu {
             },
             (0xF, _, _, 0xA) => {
                 // Check for key press, or loop back
-                self.pc -= 2;
+                // Simulate '1' input
+                self.v[instruction.x] = 1;
             },
             (0xF, _, 0x2, 0x9) => {
                 self.i = (ram::RESERVED_START * 5 * self.v[instruction.x] as usize) as u16;

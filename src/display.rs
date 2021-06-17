@@ -57,11 +57,13 @@ impl Display {
                 let old = self.framebuffer[at(x_actual, y_actual)];
                 let new = (sprite[row] >> (7 - column) & 1) == 1;
     
-                if old && !new {
-                    collision = true;
-                }
+                if new {
+                    if old {
+                        collision = true;
+                    }
 
-                self.draw_pixel(x_actual, y_actual, old ^ new);
+                    self.draw_pixel(x_actual, y_actual, old ^ new);
+                }
             }
         }
 

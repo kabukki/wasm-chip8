@@ -25,22 +25,17 @@ async function main () {
         
         const cpu = Cpu.new(rom);
         console.log(cpu);
-        
+
         setInterval(() => {
             const instruction = cpu.tick();
             console.log(hex(instruction.opcode));
-            // if (((instruction.opcode & 0xF000) >> 12) === 0xD) {
-            //     debugger;
-            // }
 
-            // View
             const data = new Uint8Array(wasm.memory.buffer, cpu.get_display(), 2048);
-
             context.beginPath();
             requestAnimationFrame(() => {
                 for (let y = 0; y < 32; y++) {
                     for (let x = 0; x < 64; x++) {
-                        context.fillStyle = data[x + y * 64] === 1 ? 'white' : 'black';
+                        context.fillStyle = data[x + y * 64] === 1 ? 'yellow' : 'black';
                         context.fillRect(x * 4, y * 4, 4, 4);
                     }
                 }
