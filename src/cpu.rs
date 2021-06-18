@@ -81,7 +81,7 @@ impl Cpu {
         }
 
         let instruction = Instruction::new(
-            (self.memory[self.pc as usize] as u16) << 8 |(self.memory[self.pc as usize + 1] as u16)
+            (self.memory[self.pc as usize] as u16) << 8 | (self.memory[self.pc as usize + 1] as u16)
         );
 
         self.pc += 2;
@@ -104,6 +104,7 @@ impl Cpu {
                 self.sp -= 1;
                 self.pc = self.stack[self.sp];
             },
+            (0, _, _, _) => (),
             (0x1, _, _, _) => self.pc = instruction.nnn,
             (0x2, _, _, _) => {
                 self.stack[self.sp] = self.pc;
