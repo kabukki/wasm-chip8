@@ -189,6 +189,10 @@ impl Cpu {
 
         return instruction;
     }
+
+    pub fn beep (&self) -> bool {
+        return self.st > 0;
+    }
 }
 
 #[wasm_bindgen]

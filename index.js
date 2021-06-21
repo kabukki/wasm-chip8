@@ -28,7 +28,13 @@ function hex (num) {
 async function main () {
     // Initialize emulator
     const wasm = await init();
-    console.log('Initialized');
+    const audio = new window.AudioContext();
+    const oscillator = audio.createOscillator();
+    audio.suspend();
+    oscillator.connect(audio.destination);
+    oscillator.type = 'square';
+    oscillator.frequency.value = 440;
+    oscillator.start();
 
     input.addEventListener('change', async (e) => {
         const [file] = e.target.files;
@@ -46,8 +52,13 @@ async function main () {
         // Timers
         setInterval(() => {
             chip8.step_timers();
+            if (chip8.beep()) {
+                audio.resume();
+            } else if (audio.state) {
+                audio.suspend();
+            }
         }, TIMER_RATE);
-        
+
         // Display
         setInterval(() => {
             const data = new Uint8Array(wasm.memory.buffer, chip8.get_framebuffer(), 2048);

@@ -44,6 +44,10 @@ impl Chip8 {
         self.cpu.cycle_timers();
     }
 
+    pub fn beep (&self) -> bool {
+        return self.cpu.beep();
+    }
+
     pub fn set_key (&mut self, key: usize, pressed: bool) {
         self.keypad.keys[key] = pressed;
     }
