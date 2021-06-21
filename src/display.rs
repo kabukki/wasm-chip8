@@ -1,7 +1,7 @@
 pub const DISPLAY_WIDTH: usize = 64;
 pub const DISPLAY_HEIGHT: usize = 32;
 pub const VRAM_SIZE: usize = DISPLAY_WIDTH * DISPLAY_HEIGHT;
-
+pub const FRAME_RATE: f32 = 30.0;
 pub const FONT_SET: [u8; 80] = [ 
   0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
   0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -57,12 +57,10 @@ impl Display {
                 let old = self.framebuffer[at(x_actual, y_actual)];
                 let new = (sprite[row] >> (7 - column) & 1) == 1;
     
-                if new {
-                    if old {
-                        collision = true;
-                    }
+                self.draw_pixel(x_actual, y_actual, old ^ new);
 
-                    self.draw_pixel(x_actual, y_actual, old ^ new);
+                if old && new {
+                    collision = true;
                 }
             }
         }

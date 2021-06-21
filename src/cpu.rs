@@ -1,10 +1,13 @@
 use wasm_bindgen::prelude::*;
 
-use crate::ram;
-use crate::display;
+use crate::memory::{Memory, PROGRAM_START, RESERVED_START};
+use crate::display::Display;
+use crate::keypad::Keypad;
 use rand::Rng;
 
-#[wasm_bindgen]
+pub const CLOCK_RATE: f32 = 1000.0 / 500.0; // 500 Hz
+pub const TIMER_RATE: f32 = 1000.0 / 60.0; // 60 Hz
+
 pub struct Cpu {
     /**
      * Registers
@@ -19,7 +22,7 @@ pub struct Cpu {
     /**
      * Program counter
      */
-    pub pc: u16,
+    pc: u16,
 
     /**
      * Stack containing program counters before jumping
@@ -41,65 +44,49 @@ pub struct Cpu {
      */
     st: u8,
 
-    memory: [u8; ram::MEMORY_SIZE],
-    display: display::Display,
+    /**
+     * PRNG
+     */
     rand: rand::rngs::ThreadRng,
 }
 
-#[wasm_bindgen]
 impl Cpu {
-    pub fn new (rom: &[u8]) -> Cpu {
-        let mut memory = [0; ram::MEMORY_SIZE];
-
-        // Store font sprites
-        memory[ram::RESERVED_START .. ram::RESERVED_START + display::FONT_SET.len()].copy_from_slice(&display::FONT_SET);
-        // Load ROM into memory
-        memory[ram::PROGRAM_START .. ram::PROGRAM_START + rom.len()].copy_from_slice(&rom);
-
+    pub fn new () -> Cpu {
         return Cpu {
             v: [0; 16],
             i: 0,
-            pc: ram::PROGRAM_START as u16,
+            pc: PROGRAM_START as u16,
             stack: [0; 16],
             sp: 0,
             dt: 0,
             st: 0,
-            memory,
-            display: display::Display::new(),
             rand: rand::thread_rng(),
         };
     }
     
-    pub fn tick (&mut self) -> Instruction{
+    pub fn cycle_timers (&mut self) {
         if self.dt > 0 {
             self.dt -= 1;
         }
-
+        
         if self.st > 0 {
-            // Beep
             self.st -= 1;
         }
-
-        let instruction = Instruction::new(
-            (self.memory[self.pc as usize] as u16) << 8 | (self.memory[self.pc as usize + 1] as u16)
-        );
-
-        self.pc += 2;
-        self.execute(&instruction);
-
-        return instruction;
     }
 
-    pub fn execute (&mut self, instruction: &Instruction) {
+    pub fn tick (&mut self, memory: &mut Memory, display: &mut Display, keypad: &Keypad) -> Instruction {
+        let instruction = Instruction::new((memory.ram[self.pc as usize] as u16) << 8 | (memory.ram[self.pc as usize + 1] as u16));
         let nibbles = (
             (instruction.opcode & 0xF000) >> 12,
             (instruction.opcode & 0x0F00) >> 8,
             (instruction.opcode & 0x00F0) >> 4,
             (instruction.opcode & 0x000F),
         );
+        
+        self.pc += 2;
 
         match nibbles {
-            (0, 0, 0xE, 0) => self.display.clear(),
+            (0, 0, 0xE, 0) => display.clear(),
             (0, 0, 0xE, 0xE) => {
                 self.sp -= 1;
                 self.pc = self.stack[self.sp];
@@ -117,7 +104,6 @@ impl Cpu {
             (0x6, _, _, _) => self.v[instruction.x] = instruction.nn,
             (0x7, _, _, _) => self.v[instruction.x] += instruction.nn,
             (0x8, _, _, 0) => self.v[instruction.x] = self.v[instruction.y],
-            (0x9, _, _, 0) => self.pc += if self.v[instruction.x] != self.v[instruction.y] { 2 } else { 0 },
             (0x8, _, _, 0x1) => self.v[instruction.x] = self.v[instruction.x] | self.v[instruction.y],
             (0x8, _, _, 0x2) => self.v[instruction.x] = self.v[instruction.x] & self.v[instruction.y],
             (0x8, _, _, 0x3) => self.v[instruction.x] = self.v[instruction.x] ^ self.v[instruction.y],
@@ -135,15 +121,22 @@ impl Cpu {
                 self.v[0xF] = if (self.v[instruction.x] & 1) == 1 { 1 } else { 0 };
                 self.v[instruction.x] /= 2;
             },
+            (0x8, _, _, 0x7) => {
+                let (res, overflow) = self.v[instruction.y].overflowing_sub(self.v[instruction.x]);
+                self.v[0xF] = if overflow { 0 } else { 1 };
+                self.v[instruction.x] = res;
+            },
             (0x8, _, _, 0xE) => {
                 self.v[0xF] = if (self.v[instruction.x] >> 7) == 1 { 1 } else { 0 };
                 self.v[instruction.x] *= 2;
             },
+            (0x9, _, _, 0) => self.pc += if self.v[instruction.x] != self.v[instruction.y] { 2 } else { 0 },
             (0xA, _, _, _) => self.i = instruction.nnn,
+            (0xB, _, _, _) => self.pc = instruction.nnn + self.v[0] as u16,
             (0xC, _, _, _) => self.v[instruction.x] = self.rand.gen_range(0..255) & instruction.nn,
             (0xD, _, _, _) => {
-                let bytes = &self.memory[self.i as usize .. self.i as usize + instruction.n as usize];
-                let collision = self.display.draw_sprite(
+                let bytes = &memory.ram[self.i as usize .. self.i as usize + instruction.n as usize];
+                let collision = display.draw_sprite(
                     self.v[instruction.x] as usize,
                     self.v[instruction.y] as usize,
                     bytes,
@@ -151,12 +144,21 @@ impl Cpu {
 
                 self.v[0xF] = if collision { 1 } else { 0 };
             },
-            (0xE, _, 0xA, 0x1) => {
-                // Check for key press, or skip
-                self.pc += 2;
+            (0xE, _, 0x9, 0xE) => self.pc += if keypad.keys[self.v[instruction.x] as usize] { 2 } else { 0 },
+            (0xE, _, 0xA, 0x1) => self.pc += if keypad.keys[self.v[instruction.x] as usize] { 0 } else { 2 },
+            (0xF, _, 0, 0x7) => self.v[instruction.x] = self.dt,
+            (0xF, _, 0, 0xA) => {
+                // Check for key press, or loop back
+                let n = keypad.keys.iter().position(|&key| key == true);
+
+                if n.is_none() {
+                    self.pc -= 2;
+                } else {
+                    self.v[instruction.x] = n.unwrap() as u8;
+                }
             },
-            (0xF, _, 0, 0x7) => {
-                self.v[instruction.x] = self.dt;
+            (0xF, _, 0x1, 0x5) => {
+                self.dt = self.v[instruction.x];
             },
             (0xF, _, 0x1, 0x8) => {
                 self.st = self.v[instruction.x];
@@ -164,46 +166,28 @@ impl Cpu {
             (0xF, _, 0x1, 0xE) => {
                 self.i += self.v[instruction.x] as u16;
             },
-            (0xF, _, 0x9, 0xE) => {
-                // Check for key press, and skip
-            },
-            (0xF, _, _, 0xA) => {
-                // Check for key press, or loop back
-                // Simulate '1' input
-                self.v[instruction.x] = 1;
-            },
             (0xF, _, 0x2, 0x9) => {
-                self.i = (ram::RESERVED_START * 5 * self.v[instruction.x] as usize) as u16;
-            },
-            (0xF, _, 0x1, 0x5) => {
-                self.dt = self.v[instruction.x];
+                self.i = (RESERVED_START * 5 * self.v[instruction.x] as usize) as u16;
             },
             (0xF, _, 0x3, 0x3) => {
-                self.memory[self.i as usize] = self.v[instruction.x] / 100 % 10;
-                self.memory[self.i as usize + 1] = self.v[instruction.x] / 10 % 10;
-                self.memory[self.i as usize + 2] = self.v[instruction.x] % 10;
+                memory.ram[self.i as usize] = self.v[instruction.x] / 100 % 10;
+                memory.ram[self.i as usize + 1] = self.v[instruction.x] / 10 % 10;
+                memory.ram[self.i as usize + 2] = self.v[instruction.x] % 10;
             },
             (0xF, _, 0x5, 0x5) => {
                 for n in 0..instruction.x + 1 {
-                    self.memory[self.i as usize + n as usize] = self.v[n as usize];
+                    memory.ram[self.i as usize + n as usize] = self.v[n as usize];
                 }
             },
             (0xF, _, 0x6, 0x5) => {
                 for n in 0..instruction.x + 1 {
-                    self.v[n as usize] = self.memory[self.i as usize + n as usize];
+                    self.v[n as usize] = memory.ram[self.i as usize + n as usize];
                 }
             },
-            (..) => {
-                self.pc -= 2; // Loop
-            },
+            (..) => (),
         }
-    }
 
-    /**
-     * Returns a pointer to the display framebuffer
-     */
-    pub fn get_display (&self) -> *const bool {
-        return self.display.framebuffer.as_ptr();
+        return instruction;
     }
 }
 
