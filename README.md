@@ -63,6 +63,7 @@
 - https://github.com/LucasHill/chip8-rust-wasm
 - https://github.com/k0nserv/chip-8
 - https://github.com/faizilham/chip8-rs
+- https://github.com/alexalikiotis/rusty-chip8
 - https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
 - https://rustwasm.github.io/docs/book/
 

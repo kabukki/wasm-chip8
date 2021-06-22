@@ -1,9 +1,8 @@
 use wasm_bindgen::prelude::*;
-
+use js_sys::Math;
 use crate::memory::{Memory, PROGRAM_START, RESERVED_START};
 use crate::display::Display;
 use crate::keypad::Keypad;
-use rand::Rng;
 
 pub const CLOCK_RATE: f32 = 1000.0 / 500.0; // 500 Hz
 pub const TIMER_RATE: f32 = 1000.0 / 60.0; // 60 Hz
@@ -43,11 +42,6 @@ pub struct Cpu {
      * Sound timer. The system’s buzzer sounds whenever the sound timer reaches zero
      */
     st: u8,
-
-    /**
-     * PRNG
-     */
-    rand: rand::rngs::ThreadRng,
 }
 
 impl Cpu {
@@ -60,7 +54,6 @@ impl Cpu {
             sp: 0,
             dt: 0,
             st: 0,
-            rand: rand::thread_rng(),
         };
     }
     
@@ -133,7 +126,7 @@ impl Cpu {
             (0x9, _, _, 0) => self.pc += if self.v[instruction.x] != self.v[instruction.y] { 2 } else { 0 },
             (0xA, _, _, _) => self.i = instruction.nnn,
             (0xB, _, _, _) => self.pc = instruction.nnn + self.v[0] as u16,
-            (0xC, _, _, _) => self.v[instruction.x] = self.rand.gen_range(0..255) & instruction.nn,
+            (0xC, _, _, _) => self.v[instruction.x] = ((Math::random() * 255.0) as u8 + 1) & instruction.nn,
             (0xD, _, _, _) => {
                 let bytes = &memory.ram[self.i as usize .. self.i as usize + instruction.n as usize];
                 let collision = display.draw_sprite(
