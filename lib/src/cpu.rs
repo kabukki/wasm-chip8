@@ -170,11 +170,13 @@ impl Cpu {
                 for n in 0..instruction.x + 1 {
                     memory.ram[self.i as usize + n as usize] = self.v[n as usize];
                 }
+                self.i = instruction.x as u16 + 1;
             },
             (0xF, _, 0x6, 0x5) => {
                 for n in 0..instruction.x + 1 {
                     self.v[n as usize] = memory.ram[self.i as usize + n as usize];
                 }
+                self.i = instruction.x as u16 + 1;
             },
             (..) => panic!("Unknown instruction"),
         }

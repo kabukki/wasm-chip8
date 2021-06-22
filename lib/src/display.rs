@@ -22,7 +22,7 @@ pub const FONT_SET: [u8; 80] = [
 ];
 
 fn at (x: usize, y: usize) -> usize {
-    return x + y * DISPLAY_WIDTH;
+    return (x + y * DISPLAY_WIDTH) % (DISPLAY_WIDTH * DISPLAY_HEIGHT);
 }
 
 pub struct Display {
@@ -59,7 +59,7 @@ impl Display {
     
                 self.draw_pixel(x_actual, y_actual, old ^ new);
 
-                if old && new {
+                if old && !new {
                     collision = true;
                 }
             }
