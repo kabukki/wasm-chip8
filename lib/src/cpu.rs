@@ -84,7 +84,6 @@ impl Cpu {
                 self.sp -= 1;
                 self.pc = self.stack[self.sp];
             },
-            (0, _, _, _) => (),
             (0x1, _, _, _) => self.pc = instruction.nnn,
             (0x2, _, _, _) => {
                 self.stack[self.sp] = self.pc;
@@ -177,7 +176,7 @@ impl Cpu {
                     self.v[n as usize] = memory.ram[self.i as usize + n as usize];
                 }
             },
-            (..) => (),
+            (..) => panic!("Unknown instruction"),
         }
 
         return instruction;
