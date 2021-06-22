@@ -2,5 +2,6 @@
 node_modules/
 target/
 pkg/
+dist/
 *.wasm
 .DS_Store

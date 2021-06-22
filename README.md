@@ -56,7 +56,7 @@
 - https://jamesfriend.com.au/porting-pce-emulator-browser
 - https://www.secondstate.io/articles/wasi-access-system-resources/
 
-### Examples
+### Examples & tutorials
 
 - https://github.com/letmaik/chip8
 - https://github.com/ColinEberhardt/wasm-rust-chip8
@@ -66,6 +66,8 @@
 - https://github.com/alexalikiotis/rusty-chip8
 - https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
 - https://rustwasm.github.io/docs/book/
+- http://emulator101.com/
+- http://blog.alexanderdickson.com/javascript-chip-8-emulator
 
 ### ROMs
 

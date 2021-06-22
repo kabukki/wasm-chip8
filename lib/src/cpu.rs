@@ -95,7 +95,7 @@ impl Cpu {
             (0x4, _, _, _) => self.pc += if self.v[instruction.x] != instruction.nn { 2 } else { 0 },
             (0x5, _, _, 0) => self.pc += if self.v[instruction.x] == self.v[instruction.y] { 2 } else { 0 },
             (0x6, _, _, _) => self.v[instruction.x] = instruction.nn,
-            (0x7, _, _, _) => self.v[instruction.x] += instruction.nn,
+            (0x7, _, _, _) => self.v[instruction.x] = self.v[instruction.x].wrapping_add(instruction.nn),
             (0x8, _, _, 0) => self.v[instruction.x] = self.v[instruction.y],
             (0x8, _, _, 0x1) => self.v[instruction.x] = self.v[instruction.x] | self.v[instruction.y],
             (0x8, _, _, 0x2) => self.v[instruction.x] = self.v[instruction.x] & self.v[instruction.y],

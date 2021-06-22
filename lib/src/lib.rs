@@ -1,3 +1,5 @@
+extern crate console_error_panic_hook;
+
 use wasm_bindgen::prelude::*;
 use crate::display::Display;
 use crate::memory::Memory;
@@ -23,6 +25,7 @@ impl Chip8 {
         let mut memory = Memory::new();
 
         memory.load_rom(rom);
+        console_error_panic_hook::set_once();
 
         return Chip8 {
             cpu: Cpu::new(),
