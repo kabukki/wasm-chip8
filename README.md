@@ -73,4 +73,5 @@
 
 - https://github.com/loktar00/chip8/tree/master/roms
 - https://github.com/corax89/chip8-test-rom
+- https://github.com/badlogic/chip8/tree/master/roms
 - https://johnearnest.github.io/chip8Archive/

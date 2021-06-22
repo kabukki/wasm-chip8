@@ -31,7 +31,7 @@ export const App = () => {
                             <input type="color" value={settings.display.colorOff} onChange={(e) => update({ display: { colorOff: e.target.value } })}/>
                         </label>
                         <label>
-                            <input type="checkbox" checked={settings.audio} onChange={(e) => update({ audio: console.log(e.target.checked) || e.target.checked })} />
+                            <input type="checkbox" checked={settings.audio} onChange={(e) => update({ audio: e.target.checked })} />
                             Sound <b>{settings.audio ? 'ON' : 'OFF'}</b>
                         </label>
                     </div>

@@ -112,7 +112,7 @@ impl Cpu {
             },
             (0x8, _, _, 0x6) => {
                 self.v[0xF] = if (self.v[instruction.x] & 1) == 1 { 1 } else { 0 };
-                self.v[instruction.x] /= 2;
+                self.v[instruction.x] = self.v[instruction.x].wrapping_div(2);
             },
             (0x8, _, _, 0x7) => {
                 let (res, overflow) = self.v[instruction.y].overflowing_sub(self.v[instruction.x]);
@@ -121,7 +121,7 @@ impl Cpu {
             },
             (0x8, _, _, 0xE) => {
                 self.v[0xF] = if (self.v[instruction.x] >> 7) == 1 { 1 } else { 0 };
-                self.v[instruction.x] *= 2;
+                self.v[instruction.x] = self.v[instruction.x].wrapping_mul(2);
             },
             (0x9, _, _, 0) => self.pc += if self.v[instruction.x] != self.v[instruction.y] { 2 } else { 0 },
             (0xA, _, _, _) => self.i = instruction.nnn,
@@ -160,7 +160,7 @@ impl Cpu {
                 self.i += self.v[instruction.x] as u16;
             },
             (0xF, _, 0x2, 0x9) => {
-                self.i = (RESERVED_START * 5 * self.v[instruction.x] as usize) as u16;
+                self.i = (RESERVED_START + 5 * self.v[instruction.x] as usize) as u16;
             },
             (0xF, _, 0x3, 0x3) => {
                 memory.ram[self.i as usize] = self.v[instruction.x] / 100 % 10;
