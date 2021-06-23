@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
  
-import { init } from '../lib/Chip8';
+import { init } from '../lib';
 import { App } from './App';
 import './index.css';
 

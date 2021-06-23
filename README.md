@@ -1,6 +1,10 @@
 # CHIP-8
 
-## Implemented opcodes
+A **CHIP-8** emulator written in Rust compiled to WebAssemly for usage on the web.
+
+> CHIP-8 is an interpreted programming language, developed by Joseph Weisbecker. It was initially used on the COSMAC VIP and Telmac 1800 8-bit microcomputers in the mid-1970s. CHIP-8 programs are run on a CHIP-8 virtual machine. It was made to allow video games to be more easily programmed for these computers.
+
+## ASI implementation
 
 | Instruction   | Implemented?  |
 |---------------|---------------|
@@ -38,6 +42,14 @@
 | `FX33`        | ✅            |
 | `FX55`        | ✅            |
 | `FX65`        | ✅            |
+
+## Toolchain
+
+The emulator is written in Rust and compiled into a WebAssembly module through [wasm-pack](https://github.com/rustwasm/wasm-pack) and uses [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) to ease interoperability with the JavaScript environment. A custom JavaScript file wraps the produced package to easily consume it in JavaScript.
+
+```
+.rs ---[wasm-pack]---> .wasm <--> JS wrapper <--- JS
+```
 
 ## Resources
 

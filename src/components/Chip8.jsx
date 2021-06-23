@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { Emulator, EmulatorAudio, EmulatorDisplay, EmulatorKeypad } from '../../lib/Chip8';
+import { Emulator, EmulatorAudio, EmulatorDisplay, EmulatorKeypad } from '../../lib';
 import { Display } from './Display';
 
 export const Chip8 = ({ wasm, rom, settings }) => {
