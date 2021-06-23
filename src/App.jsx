@@ -3,7 +3,7 @@ import React, { Suspense, useState } from 'react'
 import { useSettings } from './hooks';
 import { Chip8 } from './components/Chip8';
 
-export const App = () => {
+export const App = ({ wasm }) => {
     const { settings, update } = useSettings();
     const [rom, setRom] = useState(null);
 
@@ -15,11 +15,16 @@ export const App = () => {
             <main className="container mx-auto flex gap-4">
                 <div>
                     <Suspense fallback={<p>Initializing...</p>}>
-                        <Chip8 rom={rom} settings={settings} />
+                        <Chip8 wasm={wasm} rom={rom} settings={settings} />
                     </Suspense>
-                    💾 <input type="file" onChange={(e) => e.target.files[0]?.arrayBuffer().then((buffer) => setRom(new Uint8Array(buffer)))}/>
                 </div>
                 <div className="space-y-4">
+                    <div>
+                        <h2 className="border-b border-grey-500">💾 ROM</h2>
+                        <label className="block">
+                            <input type="file" onChange={(e) => e.target.files[0]?.arrayBuffer().then((buffer) => setRom(new Uint8Array(buffer)))}/>
+                        </label>
+                    </div>
                     <div>
                         <h2 className="border-b border-grey-500">⚙️ Settings</h2>
                         <label className="block">
