@@ -4,7 +4,6 @@
 
 | Instruction   | Implemented?  |
 |---------------|---------------|
-| `0NNN`        | Noop          |
 | `00E0`        | ✅            |
 | `00EE`        | ✅            |
 | `1NNN`        | ✅            |
