@@ -34,7 +34,7 @@ export const Chip8 = ({ wasm, rom, settings }) => {
             setEmulator(new Emulator({
                 rom,
                 wasm,
-                audio: new EmulatorAudio(),
+                audio: new EmulatorAudio('sine'),
                 keypad: new EmulatorKeypad(settings.keyboard),
                 display: new EmulatorDisplay(setFramebuffer),
                 settings,

@@ -59,7 +59,7 @@ impl Display {
     
                 self.draw_pixel(x_actual, y_actual, old ^ new);
 
-                if old && !new {
+                if old && new {
                     collision = true;
                 }
             }
