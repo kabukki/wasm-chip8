@@ -4,52 +4,25 @@ A **CHIP-8** emulator written in Rust compiled to WebAssemly for usage on the we
 
 > CHIP-8 is an interpreted programming language, developed by Joseph Weisbecker. It was initially used on the COSMAC VIP and Telmac 1800 8-bit microcomputers in the mid-1970s. CHIP-8 programs are run on a CHIP-8 virtual machine. It was made to allow video games to be more easily programmed for these computers.
 
-## ASI implementation
-
-| Instruction   | Implemented?  |
-|---------------|---------------|
-| `00E0`        | ✅            |
-| `00EE`        | ✅            |
-| `1NNN`        | ✅            |
-| `2NNN`        | ✅            |
-| `3XNN`        | ✅            |
-| `4XNN`        | ✅            |
-| `5XY0`        | ✅            |
-| `6XNN`        | ✅            |
-| `7XNN`        | ✅            |
-| `8XY0`        | ✅            |
-| `8XY1`        | ✅            |
-| `8XY2`        | ✅            |
-| `8XY3`        | ✅            |
-| `8XY4`        | ✅            |
-| `8XY5`        | ✅            |
-| `8XY6`        | ✅            |
-| `8XY7`        | ✅            |
-| `8XYE`        | ✅            |
-| `9XY0`        | ✅            |
-| `ANNN`        | ✅            |
-| `BNNN`        | ✅            |
-| `CXNN`        | ✅            |
-| `DXYN`        | ✅            |
-| `EX9E`        | ✅            |
-| `EXA1`        | ✅            |
-| `FX07`        | ✅            |
-| `FX0A`        | ✅            |
-| `FX15`        | ✅            |
-| `FX18`        | ✅            |
-| `FX1E`        | ✅            |
-| `FX29`        | ✅            |
-| `FX33`        | ✅            |
-| `FX55`        | ✅            |
-| `FX65`        | ✅            |
-
 ## Toolchain
 
-The emulator is written in Rust and compiled into a WebAssembly module through [wasm-pack](https://github.com/rustwasm/wasm-pack) and uses [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) to ease interoperability with the JavaScript environment. A custom JavaScript file wraps the produced package to easily consume it in JavaScript.
+The emulator is written in Rust and compiled into a WebAssembly module through [wasm-pack](https://github.com/rustwasm/wasm-pack) and uses [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) to ease interoperability with the JavaScript environment. A custom JavaScript file wraps the produced package for convenience when consuming it in JavaScript.
 
 ```
 .rs ---[wasm-pack]---> .wasm <--> JS wrapper <--- JS
 ```
+
+The emitted JS wrapper is distributed as an ES Module.
+
+## Technical specifications
+
+### ASI
+
+All 35 opcodes are implemented.
+
+### Known limitations
+
+*TODO*
 
 ## Resources
 

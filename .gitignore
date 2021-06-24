@@ -1,7 +1,5 @@
-.vscode/
-node_modules/
-target/
 pkg/
+target/
+node_modules/
 dist/
-*.wasm
-.DS_Store
+.vscode/
