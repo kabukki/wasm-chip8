@@ -1,4 +1,4 @@
-import { Chip8 } from './pkg';
+import init, { Chip8, set_panic_hook } from './pkg';
 
 export class EmulatorAudio {
     constructor (type) {
@@ -68,7 +68,6 @@ export class EmulatorDisplay {
 
 export class Emulator {
     constructor ({
-        wasm,
         rom,
         settings,
         audio,
@@ -77,7 +76,6 @@ export class Emulator {
     }) {
         this.chip8 = Chip8.new(rom);
         this.intervals = [];
-        this.wasm = wasm;
         this.settings = settings;
         this.audio = audio;
         this.keypad = keypad;
@@ -133,8 +131,10 @@ export class Emulator {
     }
 
     cycleDisplay () {
-        this.display.render(new Uint8Array(this.wasm.memory.buffer, this.chip8.get_framebuffer(), 2048));
+        this.display.render(this.chip8.get_framebuffer());
     }
 }
 
-export { default as init } from './pkg';
+export default async function () {
+    return init().then(set_panic_hook);
+}

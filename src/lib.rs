@@ -25,7 +25,6 @@ impl Chip8 {
         let mut memory = Memory::new();
 
         memory.load_rom(rom);
-        console_error_panic_hook::set_once();
 
         return Chip8 {
             cpu: Cpu::new(),
@@ -55,7 +54,12 @@ impl Chip8 {
         self.keypad.keys[key] = pressed;
     }
 
-    pub fn get_framebuffer (&self) -> *const bool {
-        return self.display.framebuffer.as_ptr();
+    pub fn get_framebuffer (&self) -> Vec<u8> {
+        return self.display.framebuffer.iter().map(|pixel| if *pixel { 1 } else { 0 }).collect();
     }
+}
+
+#[wasm_bindgen]
+pub fn set_panic_hook () {
+    console_error_panic_hook::set_once();
 }
