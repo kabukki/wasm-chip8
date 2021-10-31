@@ -136,12 +136,12 @@ impl Cpu {
 
                 self.v[0xF] = if collision { 1 } else { 0 };
             },
-            (0xE, _, 0x9, 0xE) => self.pc += if keypad.keys[self.v[instruction.x] as usize] { 2 } else { 0 },
-            (0xE, _, 0xA, 0x1) => self.pc += if keypad.keys[self.v[instruction.x] as usize] { 0 } else { 2 },
+            (0xE, _, 0x9, 0xE) => self.pc += if keypad.state[self.v[instruction.x] as usize] { 2 } else { 0 },
+            (0xE, _, 0xA, 0x1) => self.pc += if keypad.state[self.v[instruction.x] as usize] { 0 } else { 2 },
             (0xF, _, 0, 0x7) => self.v[instruction.x] = self.dt,
             (0xF, _, 0, 0xA) => {
                 // Check for key press, or loop back
-                let n = keypad.keys.iter().position(|&key| key == true);
+                let n = keypad.state.iter().position(|&key| key == true);
 
                 if n.is_none() {
                     self.pc -= 2;

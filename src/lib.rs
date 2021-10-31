@@ -16,25 +16,25 @@ pub struct Chip8 {
     cpu: Cpu,
     memory: Memory,
     display: Display,
-    keypad: keypad::Keypad,
+    keypad: Keypad,
 }
 
 #[wasm_bindgen]
 impl Chip8 {
-    pub fn new (rom: &[u8]) -> Chip8 {
-        let mut memory = Memory::new();
-
-        memory.load_rom(rom);
-
-        return Chip8 {
+    pub fn new (rom: &[u8]) -> Self {
+        let mut emulator = Self {
             cpu: Cpu::new(),
-            memory,
+            memory: Memory::new(),
             display: Display::new(),
             keypad: Keypad::new(),
-        }
+        };
+
+        emulator.memory.load(rom);
+
+        emulator
     }
 
-    pub fn step_cpu (&mut self) -> Instruction {
+    pub fn cycle_cpu (&mut self) -> Instruction {
         return self.cpu.tick(
             &mut self.memory,
             &mut self.display,
@@ -42,7 +42,7 @@ impl Chip8 {
         );
     }
 
-    pub fn step_timers (&mut self) {
+    pub fn cycle_timers (&mut self) {
         self.cpu.cycle_timers();
     }
 
@@ -50,12 +50,12 @@ impl Chip8 {
         return self.cpu.beep();
     }
 
-    pub fn set_key (&mut self, key: usize, pressed: bool) {
-        self.keypad.keys[key] = pressed;
+    pub fn update_key (&mut self, key: usize, state: bool) {
+        self.keypad.state[key] = state;
     }
 
     pub fn get_framebuffer (&self) -> Vec<u8> {
-        return self.display.framebuffer.iter().map(|pixel| if *pixel { 1 } else { 0 }).collect();
+        return self.display.framebuffer.iter().map(|&pixel| if pixel { 1 } else { 0 }).collect();
     }
 }
 

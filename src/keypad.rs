@@ -1,11 +1,11 @@
 pub struct Keypad {
-    pub keys: [bool; 16],
+    pub state: [bool; 16],
 }
 
 impl Keypad {
     pub fn new () -> Keypad {
         return Keypad {
-            keys: [false; 16],
+            state: [false; 16],
         };
     }
 }

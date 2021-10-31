@@ -21,7 +21,7 @@ impl Memory {
         };
     }
 
-    pub fn load_rom (&mut self, rom: &[u8]) {
+    pub fn load (&mut self, rom: &[u8]) {
         self.ram[PROGRAM_START .. PROGRAM_START + rom.len()].copy_from_slice(&rom);
     }
 }
