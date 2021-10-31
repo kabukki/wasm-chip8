@@ -1,4 +1,4 @@
-# CHIP-8
+# 💾 CHIP-8
 
 A **CHIP-8** emulator written in Rust compiled to WebAssemly for usage on the web.
 
