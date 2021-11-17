@@ -35,11 +35,11 @@ impl Chip8 {
     }
 
     pub fn cycle_cpu (&mut self) -> Instruction {
-        return self.cpu.tick(
+        self.cpu.tick(
             &mut self.memory,
             &mut self.display,
             &mut self.keypad,
-        );
+        )
     }
 
     pub fn cycle_timers (&mut self) {
@@ -47,7 +47,7 @@ impl Chip8 {
     }
 
     pub fn beep (&self) -> bool {
-        return self.cpu.beep();
+        self.cpu.beep()
     }
 
     pub fn update_key (&mut self, key: usize, state: bool) {
@@ -55,7 +55,7 @@ impl Chip8 {
     }
 
     pub fn get_framebuffer (&self) -> Vec<u8> {
-        return self.display.framebuffer.iter().map(|&pixel| if pixel { 1 } else { 0 }).collect();
+        self.display.framebuffer.iter().map(|&pixel| if pixel { 1 } else { 0 }).collect()
     }
 }
 

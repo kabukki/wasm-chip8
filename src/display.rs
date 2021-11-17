@@ -33,12 +33,11 @@ pub struct Display {
 }
 
 impl Display {
-    pub fn new () -> Display {
-        return Display {
+    pub fn new () -> Self {
+        Self {
             framebuffer: [false; VRAM_SIZE], 
-        };
+        }
     }
-
 
     pub fn draw_pixel (&mut self, x: usize, y: usize, on: bool) {
         self.framebuffer[at(x, y)] = on;
