@@ -19,7 +19,8 @@ export interface Options {
     };
 }
 
-export class Chip8 extends Emulator<AudioBeep, VideoOnOff> {
+export class Chip8 extends Emulator <AudioBeep, VideoOnOff> {
+    public static memory: WebAssembly.Memory;
     public readonly rom: Rom;
     private vm: any;
     private lastInstruction: string;
@@ -33,6 +34,16 @@ export class Chip8 extends Emulator<AudioBeep, VideoOnOff> {
         this.rom = rom;
         this.vm = VM.new(rom.buffer);
         this.cycleCPU = throttle(this.cycleCPU.bind(this), 1000 / 200);
+    }
+
+    static async init () {
+        if (!Chip8.memory) {
+            const wasm = await init();
+
+            set_panic_hook();
+
+            Chip8.memory = wasm.memory;
+        }
     }
 
     get shouldBeep () {
@@ -87,12 +98,4 @@ export class Chip8 extends Emulator<AudioBeep, VideoOnOff> {
             lastInstruction: this.lastInstruction,
         };
     }
-}
-
-export default async function () {
-    const wasm = await init();
-    
-    set_panic_hook();
-
-    return wasm;
 }
