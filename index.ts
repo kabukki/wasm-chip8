@@ -50,8 +50,6 @@ export class Chip8 extends Emulator <AudioBeep, VideoOnOff> {
         return this.vm.beep();
     }
 
-    loadSave () {}
-
     input (key: Button, state: boolean) {
         this.vm.update_key(key, state);
     }
@@ -84,6 +82,8 @@ export class Chip8 extends Emulator <AudioBeep, VideoOnOff> {
     save () {
         return null;
     }
+
+    load () {}
 
     debug () {
         const stats = this.stats.stats();
