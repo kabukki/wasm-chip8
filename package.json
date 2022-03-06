@@ -6,18 +6,25 @@
     "dist/*"
   ],
   "scripts": {
-    "build:wasm": "wasm-pack build -t web --profiling --out-name index",
-    "build:lib": "esbuild --bundle --outdir=dist --sourcemap --format=esm index.ts && cp pkg/*.wasm dist",
-    "build:types": "tsc --emitDeclarationOnly",
-    "build": "npm run build:wasm && npm run build:lib && npm run build:types",
+    "back:build": "cd backend && wasm-pack build --profiling --target web --out-name index",
+    "back:watch": "cd backend && cargo watch -i pkg -s 'wasm-pack build --profiling --target web --out-name index'",
+    "front:build": "esbuild frontend/index.jsx --bundle --outdir=dist --sourcemap --format=esm --loader:.png=dataurl --loader:.wasm=dataurl --external:react",
+    "front:watch": "esbuild frontend/index.jsx --bundle --outdir=dist --sourcemap --format=esm --loader:.png=dataurl --loader:.wasm=dataurl --external:react --watch",
+    "build": "npm run back:build && npm run front:build",
+    "watch": "concurrently --prefix-colors red.bold,yellow.bold -n back,front npm:back:watch npm:front:watch",
+    "start": "concurrently --prefix-colors white.bold,cyan.bold -n watch,serve npm:watch npm:serve",
+    "serve": "cd playground && npm start",
     "prepack": "npm run build"
-  },
-  "devDependencies": {
-    "esbuild": "^0.13.14",
-    "typescript": "^4.3.5"
   },
   "dependencies": {
     "@kabukki/emukit": "^1.1.0",
     "lodash.throttle": "^4.1.1"
+  },
+  "devDependencies": {
+    "concurrently": "^7.0.0",
+    "esbuild": "^0.13.15"
+  },
+  "peerDependencies": {
+    "react": "^17.0.2"
   }
 }

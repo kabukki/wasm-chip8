@@ -1,18 +1,55 @@
 # 💾 CHIP-8
 
-A **CHIP-8** emulator written in Rust compiled to WebAssemly for usage on the web.
+A **CHIP-8** emulator written in Rust, compiled to WebAssemly, and consumed by React.
 
 > CHIP-8 is an interpreted programming language, developed by Joseph Weisbecker. It was initially used on the COSMAC VIP and Telmac 1800 8-bit microcomputers in the mid-1970s. CHIP-8 programs are run on a CHIP-8 virtual machine. It was made to allow video games to be more easily programmed for these computers.
 
+## Usage
+
+Wrap your application in the `EmulatorProvider`, and consume it through the `EmulatorContext` context.
+
+```jsx
+import React, { useContext } from 'react';
+import { render } from 'react-dom';
+import { init, EmulatorProvider, EmulatorContext } from '@kabukki/wasm-chip8';
+
+export const App = () => {
+    const { canvas, load } = useContext(EmulatorContext);
+
+    const onChange = async (e) => {
+        const [file] = e.target.files;
+        const buffer = new Uint8Array(await file?.arrayBuffer());
+
+        load(buffer);
+
+        e.preventDefault();
+    };
+
+    return (
+        <main>
+            <input type="file" onChange={onChange} />
+            <canvas ref={canvas} />
+        </main>
+    );
+};
+
+init().then(() => {
+    render(
+        <EmulatorProvider>
+            <App />
+        </EmulatorProvider>,
+        document.querySelector('#app'),
+    );
+});
+```
+
 ## Toolchain
 
-The emulator is written in Rust and compiled into a WebAssembly module through [wasm-pack](https://github.com/rustwasm/wasm-pack) and uses [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) to ease interoperability with the JavaScript environment. A custom JavaScript file wraps the produced package for convenience when consuming it in JavaScript.
+The emulator is written in Rust and compiled into a WebAssembly module through [wasm-pack](https://github.com/rustwasm/wasm-pack) and uses [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) to ease interoperability with the JavaScript environment. An extra layer wraps the produced package for convenience when consuming it in React.
 
 ```
-.rs ---[wasm-pack]---> .wasm <--> JS wrapper <--- JS
+.rs ---[wasm-pack]---> .wasm <--> React
 ```
-
-The emitted JS wrapper is distributed as an ES Module.
 
 ## Technical specifications
 

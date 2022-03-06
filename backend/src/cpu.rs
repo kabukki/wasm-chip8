@@ -76,6 +76,7 @@ impl Cpu {
             (instruction.opcode & 0x000F),
         );
         
+        println!("tick");
         self.pc += 2;
 
         match nibbles {
@@ -176,7 +177,7 @@ impl Cpu {
                     self.v[n as usize] = memory.ram[self.i as usize + n as usize];
                 }
             },
-            (..) => panic!("Unknown instruction"),
+            (..) => panic!("Unknown instruction {:02X}", instruction.opcode),
         }
 
         return instruction;
