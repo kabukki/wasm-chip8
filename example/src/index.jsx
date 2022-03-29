@@ -1,6 +1,8 @@
 import React, { StrictMode, useEffect, useState } from 'react';
 import { render } from 'react-dom';
-import { init, EmulatorProvider, Keypad, useIO, useLifecycle } from '@kabukki/wasm-chip8';
+import { init, EmulatorProvider, useIO, useLifecycle } from '@kabukki/wasm-chip8';
+
+import { Keypad } from './components';
 
 const useInput = ({ keymap, onInput }) => {
     const [input, setInput] = useState(() => new Array(16).fill(false));

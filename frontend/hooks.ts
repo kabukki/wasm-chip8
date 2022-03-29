@@ -26,18 +26,14 @@ export const useSettings = () => {
     };
 };
 
-export const useAudio = (type = 'sine', frequency = 440) => {
+export const useAudio = (type: OscillatorType = 'sine', frequency = 440) => {
     const [context] = useState(() => new AudioContext());
     const [gain] = useState(() => context.createGain());
     const [oscillator] = useState(() => context.createOscillator());
 
-    const start = () => {
-        context.resume();
-    };
+    const start = () => context.resume();
 
-    const stop = () => {
-        context.suspend();
-    };
+    const stop = () => context.suspend();
 
     useEffect(() => {
         gain.gain.value = 1;

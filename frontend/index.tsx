@@ -1,4 +1,4 @@
-import React, { useRef, createContext, useEffect, useState, useCallback, useContext } from 'react';
+import React, { useRef, createContext, useEffect, useState, useCallback, useContext, MutableRefObject } from 'react';
 import throttle from 'lodash.throttle';
 
 import initWasm, { Chip8, set_panic_hook } from '../backend/pkg';
@@ -8,30 +8,39 @@ import { useAudio } from './hooks';
 import picture from './assets/picture.png';
 import content from './assets/content.png';
 
-// export type Button = (
-//     0x0 | 0x1 | 0x2 | 0x3 |
-//     0x4 | 0x5 | 0x6 | 0x7 |
-//     0x8 | 0x9 | 0xA | 0xB |
-//     0xC | 0xD | 0xE | 0xF
-// );
+type Button = (
+    0x0 | 0x1 | 0x2 | 0x3 |
+    0x4 | 0x5 | 0x6 | 0x7 |
+    0x8 | 0x9 | 0xA | 0xB |
+    0xC | 0xD | 0xE | 0xF
+);
 
-// useAnimationFrame -- with game-stats
-// https://css-tricks.com/using-requestanimationframe-with-react-hooks/
+interface IEmulatorContext {
+    canvas: MutableRefObject<HTMLCanvasElement>;
+    error?: Error;
+    audio: ReturnType<typeof useAudio>;
+    input (key: Button, state: boolean): void;
+    load (rom: Uint8Array): void;
+    start (): void;
+    stop (error?: Error): void;
+    reset (): void;
+}
 
-export const EmulatorContext = createContext({});
+export const EmulatorContext = createContext<IEmulatorContext>(null);
 
 /**
  * Provides emulator with core functionality
+ * TODO: useAnimationFrame -- with game-stats; https://css-tricks.com/using-requestanimationframe-with-react-hooks/
  */
 export const EmulatorProvider = ({ children }) => {
-    const canvas = useRef();
-    const rafHandle = useRef();
+    const canvas = useRef<HTMLCanvasElement>();
+    const rafHandle = useRef<ReturnType<typeof requestAnimationFrame>>();
     const audio = useAudio();
-    const [emulator, setEmulator] = useState(null);
+    const [emulator, setEmulator] = useState<Chip8>(null);
     const [error, setError] = useState(null);
     const [debug, setDebug] = useState(() => ({}));
 
-    const load = async (rom) => {
+    const load = async (rom: Uint8Array) => {
         try {
             const emulator = Chip8.new(rom);
             setEmulator(emulator);
@@ -91,7 +100,7 @@ export const EmulatorProvider = ({ children }) => {
         audio.start();
     };
 
-    const stop = (error) => {
+    const stop = (error?: Error) => {
         audio.stop();
         cancelAnimationFrame(rafHandle.current);
         if (error) {
@@ -104,7 +113,7 @@ export const EmulatorProvider = ({ children }) => {
         console.warn('Reset not implemented');
     };
 
-    const input = (key, state) => {
+    const input = (key: Button, state: boolean) => {
         emulator?.update_key(key, state);
     };
 
@@ -119,13 +128,13 @@ export const EmulatorProvider = ({ children }) => {
     return (
         <EmulatorContext.Provider value={{
             canvas,
-            input,
+            error,
+            audio,
             load,
             start,
             stop,
             reset,
-            error,
-            audio,
+            input,
         }}>
             {children}
         </EmulatorContext.Provider>
@@ -183,5 +192,3 @@ export const init = async () => {
 
     return instance;
 };
-
-export * from './components';

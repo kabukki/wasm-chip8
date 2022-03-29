@@ -8,8 +8,8 @@
   "scripts": {
     "back:build": "cd backend && wasm-pack build --profiling --target web --out-name index",
     "back:watch": "cd backend && cargo watch -i pkg -s 'wasm-pack build --profiling --target web --out-name index'",
-    "front:build": "esbuild frontend/index.jsx --bundle --outdir=dist --sourcemap --format=esm --loader:.png=dataurl --loader:.wasm=dataurl --external:react",
-    "front:watch": "esbuild frontend/index.jsx --bundle --outdir=dist --sourcemap --format=esm --loader:.png=dataurl --loader:.wasm=dataurl --external:react --watch",
+    "front:build": "esbuild frontend/index.tsx --bundle --outdir=dist --sourcemap --format=esm --loader:.png=dataurl --loader:.wasm=dataurl --external:react",
+    "front:watch": "esbuild frontend/index.tsx --bundle --outdir=dist --sourcemap --format=esm --loader:.png=dataurl --loader:.wasm=dataurl --external:react --watch",
     "build": "npm run back:build && npm run front:build",
     "watch": "concurrently --prefix-colors red.bold,yellow.bold -n back,front npm:back:watch npm:front:watch",
     "start": "concurrently --prefix-colors white.bold,cyan.bold -n watch,serve npm:watch npm:serve",
@@ -21,6 +21,7 @@
     "lodash.throttle": "^4.1.1"
   },
   "devDependencies": {
+    "@types/react": "^17.0.43",
     "concurrently": "^7.0.0",
     "esbuild": "^0.13.15"
   },
