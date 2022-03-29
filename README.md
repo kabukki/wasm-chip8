@@ -48,7 +48,7 @@ init().then(() => {
 The emulator is written in Rust and compiled into a WebAssembly module through [wasm-pack](https://github.com/rustwasm/wasm-pack) and uses [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) to ease interoperability with the JavaScript environment. An extra layer wraps the produced package for convenience when consuming it in React.
 
 ```
-.rs ---[wasm-pack]---> .wasm <--> React
+.rs ---[wasm-pack]---> .wasm + JS glue code <-- React
 ```
 
 ## Technical specifications

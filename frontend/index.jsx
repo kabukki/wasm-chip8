@@ -3,6 +3,7 @@ import throttle from 'lodash.throttle';
 
 import initWasm, { Chip8, set_panic_hook } from '../backend/pkg';
 import wasm from '../backend/pkg/index_bg.wasm';
+import { useAudio } from './hooks';
 
 import picture from './assets/picture.png';
 import content from './assets/content.png';
@@ -14,51 +15,21 @@ import content from './assets/content.png';
 //     0xC | 0xD | 0xE | 0xF
 // );
 
+// useAnimationFrame -- with game-stats
+// https://css-tricks.com/using-requestanimationframe-with-react-hooks/
+
 export const EmulatorContext = createContext({});
 
-const useAudio = (type = 'sine', frequency = 440) => {
-    const [context] = useState(() => new AudioContext());
-    const [gain] = useState(() => context.createGain());
-    const [oscillator] = useState(() => context.createOscillator());
-
-    const start = () => {
-        context.resume();
-    };
-
-    const stop = () => {
-        context.suspend();
-    };
-
-    useEffect(() => {
-        gain.gain.value = 1;
-        gain.connect(context.destination);
-        oscillator.type = type;
-        oscillator.frequency.value = frequency;
-        oscillator.start();
-    }, []);
-    
-    return {
-        sampleRate: context.sampleRate,
-        start,
-        stop,
-        play () {
-            oscillator.connect(gain);
-        },
-        pause () {
-            oscillator.disconnect();
-        },
-    };
-};
-
-// useAnimationFrame -- with game-stats
-
+/**
+ * Provides emulator with core functionality
+ */
 export const EmulatorProvider = ({ children }) => {
     const canvas = useRef();
     const rafHandle = useRef();
     const audio = useAudio();
     const [emulator, setEmulator] = useState(null);
     const [error, setError] = useState(null);
-    const [input, setInput] = useState(() => new Array(16).fill(false));
+    const [debug, setDebug] = useState(() => ({}));
 
     const load = async (rom) => {
         try {
@@ -85,14 +56,18 @@ export const EmulatorProvider = ({ children }) => {
     }, [emulator]);
 
     const paint = () => {
-        const context = canvas.current.getContext('2d');
-        const framebuffer = emulator.get_framebuffer();
-
-        for (let y = 0; y < context.canvas.height; y++) {
-            for (let x = 0; x < context.canvas.width; x++) {
-                context.fillStyle = framebuffer[x + y * context.canvas.width] === 1 ? 'white' : 'black';
-                context.fillRect(x, y, 1, 1);
+        if (canvas.current) {
+            const context = canvas.current.getContext('2d');
+            const framebuffer = emulator.get_framebuffer();
+    
+            for (let y = 0; y < context.canvas.height; y++) {
+                for (let x = 0; x < context.canvas.width; x++) {
+                    context.fillStyle = framebuffer[x + y * context.canvas.width] === 1 ? 'white' : 'black';
+                    context.fillRect(x, y, 1, 1);
+                }
             }
+        } else {
+            console.warn('Canvas ref is never used');
         }
     };
 
@@ -129,6 +104,11 @@ export const EmulatorProvider = ({ children }) => {
         console.warn('Reset not implemented');
     };
 
+    const input = (key, state) => {
+        emulator?.update_key(key, state);
+    };
+
+    // Auto-start emulator on load
     useEffect(() => {
         if (emulator) {
             start();
@@ -139,54 +119,50 @@ export const EmulatorProvider = ({ children }) => {
     return (
         <EmulatorContext.Provider value={{
             canvas,
-            inputState: input,
-            input (key, state) {
-                setInput((previous) => previous.map((pressed, index) => index === key ? state : pressed));
-                emulator?.update_key(key, state);
-            },
+            input,
             load,
             start,
             stop,
             reset,
             error,
+            audio,
         }}>
             {children}
         </EmulatorContext.Provider>
     );
 };
 
-export const useDebug = () => {
+export const useLifecycle = () => {
+    const { load, start, stop, reset } = useContext(EmulatorContext);
 
-};
-
-export const useInput = (keymap) => {
-    const { input } = useContext(EmulatorContext);
-
-    const onKey = (e) => {
-        if (e.key in keymap) {
-            const key = keymap[e.key];
-            switch (e.type) {
-                case 'keydown':
-                    input(key, true);
-                    break;
-                case 'keyup':
-                    input(key, false);
-                    break;
-            }
-            e.preventDefault();
-        }
+    return {
+        load,
+        start,
+        stop,
+        reset,
     };
-
-    useEffect(() => {
-        document.addEventListener('keydown', onKey);
-        document.addEventListener('keyup', onKey);
-
-        return () => {
-            document.removeEventListener('keydown', onKey);
-            document.removeEventListener('keyup', onKey);
-        };
-    }, [onKey]);
 };
+
+export const useIO = () => {
+    const { input, canvas, audio } = useContext(EmulatorContext);
+
+    return {
+        input,
+        canvas,
+        audio,
+    };
+};
+
+export const useDebug = () => {};
+
+// const usePerformance = () => {
+//     return {
+//         fps,
+//         delta,
+//         frame,
+//         timestamp,
+//     };
+// };
 
 export const meta = {
     name: 'CHIP-8',

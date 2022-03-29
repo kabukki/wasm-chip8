@@ -1,100 +1,5 @@
 import { useEffect, useState } from 'react';
 
-import { Chip8 } from './_index';
-
-export const useEmulator = (settings, canvas) => {
-    const [emulator, setEmulator] = useState(null);
-    const [error, setError] = useState(null);
-    const [debug, setDebug] = useState(() => ({}));
-
-    const onDebug = ({ detail: info }) => {
-        setDebug((previous) => ({
-            ...previous,
-            ...info,
-        }));
-    };
-
-    const onError = ({ detail: error }) => {
-        console.error(error);
-        setError(error.error);
-    };
-
-    useEffect(() => {
-        if (emulator) {
-            emulator.addEventListener('debug', onDebug);
-            emulator.addEventListener('error', onError);
-            emulator.start();
-
-            return () => {
-                emulator.removeEventListener('debug', onDebug);
-                emulator.removeEventListener('error', onError);
-                emulator.stop();
-            };
-        }
-    }, [emulator]);
-    
-    return {
-        emulator,
-        debug,
-        error,
-        stop () {
-            setEmulator(null);
-        },
-        async load (rom) {
-            try {
-                const emulator = new Chip8({
-                    canvas: canvas.current,
-                    rom,
-                    colors: {
-                        on: settings.ui.colorOn,
-                        off: settings.ui.colorOff,
-                    },
-                });
-    
-                await emulator.init();
-
-                setEmulator(emulator);
-            } catch (err) {
-                console.error(err);
-                setError(err);
-            }
-        },
-    };
-};
-
-export const useInput = (keymap, { onInput = console.log }) => {
-    const [input, setInput] = useState(() => new Array(16).fill(false));
-
-    const onKey = (e) => {
-        if (e.key in keymap) {
-            const key = keymap[e.key];
-            e.preventDefault();
-            switch (e.type) {
-                case 'keydown':
-                    onInput(key, true);
-                    setInput((previous) => previous.map((pressed, index) => index === key ? true : pressed));
-                    break;
-                case 'keyup':
-                    onInput(key, false);
-                    setInput((previous) => previous.map((pressed, index) => index === key ? false : pressed));
-                    break;
-            }
-        }
-    };
-
-    useEffect(() => {
-        document.addEventListener('keydown', onKey);
-        document.addEventListener('keyup', onKey);
-
-        return () => {
-            document.removeEventListener('keydown', onKey);
-            document.removeEventListener('keyup', onKey);
-        };
-    }, [onKey]);
-
-    return input;
-};
-
 export const useSettings = () => {
     const [modules, setModules] = useState(['performance', 'input']);
     const [ui, setUI] = useState({
@@ -118,5 +23,39 @@ export const useSettings = () => {
         setModules,
         setUI,
         setInput,
+    };
+};
+
+export const useAudio = (type = 'sine', frequency = 440) => {
+    const [context] = useState(() => new AudioContext());
+    const [gain] = useState(() => context.createGain());
+    const [oscillator] = useState(() => context.createOscillator());
+
+    const start = () => {
+        context.resume();
+    };
+
+    const stop = () => {
+        context.suspend();
+    };
+
+    useEffect(() => {
+        gain.gain.value = 1;
+        gain.connect(context.destination);
+        oscillator.type = type;
+        oscillator.frequency.value = frequency;
+        oscillator.start();
+    }, []);
+    
+    return {
+        sampleRate: context.sampleRate,
+        start,
+        stop,
+        play () {
+            oscillator.connect(gain);
+        },
+        pause () {
+            oscillator.disconnect();
+        },
     };
 };

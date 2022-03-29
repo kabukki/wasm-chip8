@@ -13,7 +13,7 @@
     "build": "npm run back:build && npm run front:build",
     "watch": "concurrently --prefix-colors red.bold,yellow.bold -n back,front npm:back:watch npm:front:watch",
     "start": "concurrently --prefix-colors white.bold,cyan.bold -n watch,serve npm:watch npm:serve",
-    "serve": "cd playground && npm start",
+    "serve": "cd example && npm start",
     "prepack": "npm run build"
   },
   "dependencies": {
