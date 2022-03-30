@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import GameStats from 'game-stats';
 
 export const useSettings = () => {
     const [modules, setModules] = useState(['performance', 'input']);
@@ -31,10 +32,6 @@ export const useAudio = (type: OscillatorType = 'sine', frequency = 440) => {
     const [gain] = useState(() => context.createGain());
     const [oscillator] = useState(() => context.createOscillator());
 
-    const start = () => context.resume();
-
-    const stop = () => context.suspend();
-
     useEffect(() => {
         gain.gain.value = 1;
         gain.connect(context.destination);
@@ -45,13 +42,39 @@ export const useAudio = (type: OscillatorType = 'sine', frequency = 440) => {
     
     return {
         sampleRate: context.sampleRate,
-        start,
-        stop,
+        start () {
+            return context.resume();
+        },
+        stop () {
+            return context.suspend();
+        },
         play () {
-            oscillator.connect(gain);
+            return oscillator.connect(gain);
         },
         pause () {
-            oscillator.disconnect();
+            return oscillator.disconnect();
+        },
+    };
+};
+
+export const useAnimationFrame = () => {
+    const stats = useRef(new GameStats());
+    const handle = useRef<ReturnType<typeof requestAnimationFrame>>();
+
+    return {
+        stats: stats.current,
+        start (callback) {
+            const rafCallback = (timestamp) => {
+                console.log('rAF');
+                callback();
+                stats.current.record(timestamp);
+                handle.current = requestAnimationFrame(rafCallback);
+            };
+        
+            handle.current = requestAnimationFrame(rafCallback);
+        },
+        stop () {
+            cancelAnimationFrame(handle.current);
         },
     };
 };

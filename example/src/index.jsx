@@ -1,8 +1,8 @@
 import React, { StrictMode, useEffect, useState } from 'react';
 import { render } from 'react-dom';
-import { init, EmulatorProvider, useIO, useLifecycle } from '@kabukki/wasm-chip8';
+import { init, EmulatorProvider, useIO, useLifecycle, useDebug } from '@kabukki/wasm-chip8';
 
-import { Keypad } from './components';
+import { Keypad, Display } from './components';
 
 const useInput = ({ keymap, onInput }) => {
     const [input, setInput] = useState(() => new Array(16).fill(false));
@@ -39,7 +39,8 @@ const useInput = ({ keymap, onInput }) => {
 
 const App = () => {
     const { load } = useLifecycle();
-    const { input, canvas } = useIO();
+    const { input } = useIO();
+    const { performance } = useDebug();
 
     const inputState = useInput({
         keymap: {
@@ -73,12 +74,8 @@ const App = () => {
             WOW
             <input type="file" onChange={onChange} />
             <div>
-                <canvas
-                    style={{ imageRendering: 'pixelated', width: '100%' }}
-                    ref={canvas}
-                    width={64}
-                    height={32}
-                />
+                <b>FPS: {performance?.fpsAverage}</b>
+                <Display />
                 <Keypad input={inputState} />
                 {/* {crt && <div className="absolute inset-0 crt" />} */}
             </div>

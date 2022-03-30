@@ -11,17 +11,14 @@ Wrap your application in the `EmulatorProvider`, and consume it through the `Emu
 ```jsx
 import React, { useContext } from 'react';
 import { render } from 'react-dom';
-import { init, EmulatorProvider, EmulatorContext } from '@kabukki/wasm-chip8';
+import { init, EmulatorProvider, useLifecycle, useIO } from '@kabukki/wasm-chip8';
 
 export const App = () => {
-    const { canvas, load } = useContext(EmulatorContext);
+    const { load } = useLifecycle();
+    const { canvas } = useIO();
 
     const onChange = async (e) => {
-        const [file] = e.target.files;
-        const buffer = new Uint8Array(await file?.arrayBuffer());
-
-        load(buffer);
-
+        load(new Uint8Array(await e.target.files[0]?.arrayBuffer()));
         e.preventDefault();
     };
 
@@ -33,14 +30,12 @@ export const App = () => {
     );
 };
 
-init().then(() => {
-    render(
-        <EmulatorProvider>
-            <App />
-        </EmulatorProvider>,
-        document.querySelector('#app'),
-    );
-});
+init().then(() => render(
+    <EmulatorProvider>
+        <App />
+    </EmulatorProvider>,
+    document.querySelector('#app'),
+));
 ```
 
 ## Toolchain

@@ -1,9 +1,10 @@
 import React, { useRef, createContext, useEffect, useState, useCallback, useContext, MutableRefObject } from 'react';
 import throttle from 'lodash.throttle';
+import Statistics from 'game-stats/lib/interfaces/Statistics';
 
 import initWasm, { Chip8, set_panic_hook } from '../backend/pkg';
 import wasm from '../backend/pkg/index_bg.wasm';
-import { useAudio } from './hooks';
+import { useAudio, useAnimationFrame } from './hooks';
 
 import picture from './assets/picture.png';
 import content from './assets/content.png';
@@ -15,10 +16,15 @@ type Button = (
     0xC | 0xD | 0xE | 0xF
 );
 
+interface IDebug {
+    performance: Statistics;
+}
+
 interface IEmulatorContext {
     canvas: MutableRefObject<HTMLCanvasElement>;
     error?: Error;
     audio: ReturnType<typeof useAudio>;
+    debug: IDebug;
     input (key: Button, state: boolean): void;
     load (rom: Uint8Array): void;
     start (): void;
@@ -30,15 +36,14 @@ export const EmulatorContext = createContext<IEmulatorContext>(null);
 
 /**
  * Provides emulator with core functionality
- * TODO: useAnimationFrame -- with game-stats; https://css-tricks.com/using-requestanimationframe-with-react-hooks/
  */
 export const EmulatorProvider = ({ children }) => {
-    const canvas = useRef<HTMLCanvasElement>();
-    const rafHandle = useRef<ReturnType<typeof requestAnimationFrame>>();
+    const raf = useAnimationFrame();
     const audio = useAudio();
+    const canvas = useRef<HTMLCanvasElement>();
     const [emulator, setEmulator] = useState<Chip8>(null);
-    const [error, setError] = useState(null);
-    const [debug, setDebug] = useState(() => ({}));
+    const [error, setError] = useState<Error>(null);
+    const [debug, setDebug] = useState<IDebug>(null);
 
     const load = async (rom: Uint8Array) => {
         try {
@@ -80,29 +85,28 @@ export const EmulatorProvider = ({ children }) => {
         }
     };
 
-    const start = () => {
-        const rafCallback = (timestamp) => {
-            try {
-                console.log('rAF');
-                cycleCPU();
-                cycleTimers();
-                paint();
-                // this.stats.record(timestamp);
-                // this.emitSave();
-                // this.emitDebug();
-                rafHandle.current = requestAnimationFrame(rafCallback);
-            } catch (err) {
-                stop(err);
-            }
-        };
+    const cycle = () => {
+        try {
+            cycleCPU();
+            cycleTimers();
+            paint();
+            setDebug((previous) => ({
+                ...previous,
+                performance: raf.stats.stats(),
+            }));
+        } catch (err) {
+            stop(err);
+        }
+    };
 
-        rafHandle.current = requestAnimationFrame(rafCallback);
+    const start = () => {
+        raf.start(cycle);
         audio.start();
     };
 
     const stop = (error?: Error) => {
         audio.stop();
-        cancelAnimationFrame(rafHandle.current);
+        raf.stop();
         if (error) {
             console.error(error);
             setError(error);
@@ -130,6 +134,7 @@ export const EmulatorProvider = ({ children }) => {
             canvas,
             error,
             audio,
+            debug,
             load,
             start,
             stop,
@@ -162,16 +167,13 @@ export const useIO = () => {
     };
 };
 
-export const useDebug = () => {};
+export const useDebug = () => {
+    const { debug } = useContext(EmulatorContext);
 
-// const usePerformance = () => {
-//     return {
-//         fps,
-//         delta,
-//         frame,
-//         timestamp,
-//     };
-// };
+    return {
+        performance: debug?.performance,
+    };
+};
 
 export const meta = {
     name: 'CHIP-8',
