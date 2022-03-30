@@ -1,4 +1,4 @@
-import React, { useRef, createContext, useEffect, useState, useCallback, useContext, MutableRefObject } from 'react';
+import React, { useRef, createContext, useState, useCallback, useContext, useEffect, MutableRefObject } from 'react';
 import throttle from 'lodash.throttle';
 import Statistics from 'game-stats/lib/interfaces/Statistics';
 
@@ -9,12 +9,19 @@ import { useAudio, useAnimationFrame } from './hooks';
 import picture from './assets/picture.png';
 import content from './assets/content.png';
 
-type Button = (
+export type Button = (
     0x0 | 0x1 | 0x2 | 0x3 |
     0x4 | 0x5 | 0x6 | 0x7 |
     0x8 | 0x9 | 0xA | 0xB |
     0xC | 0xD | 0xE | 0xF
 );
+
+export enum Status {
+    NONE,
+    IDLE,
+    RUNNING,
+    ERROR,
+}
 
 interface IDebug {
     performance: Statistics;
@@ -22,14 +29,15 @@ interface IDebug {
 
 interface IEmulatorContext {
     canvas: MutableRefObject<HTMLCanvasElement>;
-    error?: Error;
     audio: ReturnType<typeof useAudio>;
     debug: IDebug;
+    error?: Error;
+    status: Status;
     input (key: Button, state: boolean): void;
-    load (rom: Uint8Array): void;
+    create (rom: Uint8Array): void;
     start (): void;
     stop (error?: Error): void;
-    reset (): void;
+    destroy (): void;
 }
 
 export const EmulatorContext = createContext<IEmulatorContext>(null);
@@ -44,20 +52,11 @@ export const EmulatorProvider = ({ children }) => {
     const [emulator, setEmulator] = useState<Chip8>(null);
     const [error, setError] = useState<Error>(null);
     const [debug, setDebug] = useState<IDebug>(null);
-
-    const load = async (rom: Uint8Array) => {
-        try {
-            const emulator = Chip8.new(rom);
-            setEmulator(emulator);
-        } catch (err) {
-            console.error(err);
-            setError(err);
-        }
-    };
+    const [status, setStatus] = useState<Status>(Status.NONE);
 
     const cycleCPU = useCallback(throttle(() => {
-        emulator.cycle_cpu();
-    }, 1000 / 200), [emulator]);
+        return emulator.cycle_cpu();
+    }, 1000 / 500), [emulator]);
 
     const cycleTimers = useCallback(() => {
         emulator.cycle_timers();
@@ -87,34 +86,51 @@ export const EmulatorProvider = ({ children }) => {
 
     const cycle = () => {
         try {
-            cycleCPU();
+            const lastInstruction = cycleCPU();
             cycleTimers();
             paint();
             setDebug((previous) => ({
                 ...previous,
                 performance: raf.stats.stats(),
+                lastInstruction,
             }));
         } catch (err) {
             stop(err);
         }
     };
 
+    const create = async (rom: Uint8Array) => {
+        try {
+            const emulator = Chip8.new(rom);
+            setError(null);
+            setDebug(null);
+            setEmulator(emulator);
+        } catch (err) {
+            console.error(err);
+            setError(err);
+        }
+    };
+
     const start = () => {
         raf.start(cycle);
         audio.start();
+        setStatus(Status.RUNNING);
     };
 
     const stop = (error?: Error) => {
         audio.stop();
         raf.stop();
-        if (error) {
+        if (error && error instanceof Error) {
             console.error(error);
             setError(error);
+            setStatus(Status.ERROR);
+        } else {
+            setStatus(Status.IDLE);
         }
     };
 
-    const reset = () => {
-        console.warn('Reset not implemented');
+    const destroy = () => {
+        setEmulator(null);
     };
 
     const input = (key: Button, state: boolean) => {
@@ -126,19 +142,22 @@ export const EmulatorProvider = ({ children }) => {
         if (emulator) {
             start();
             return stop;
+        } else {
+            setStatus(Status.NONE);
         }
     }, [emulator]);
-
+    
     return (
         <EmulatorContext.Provider value={{
             canvas,
-            error,
             audio,
             debug,
-            load,
+            error,
+            status,
+            create,
             start,
             stop,
-            reset,
+            destroy,
             input,
         }}>
             {children}
@@ -146,14 +165,28 @@ export const EmulatorProvider = ({ children }) => {
     );
 };
 
+export const Display = ({ style = {}, ...props }) => {
+    const { canvas } = useContext(EmulatorContext);
+
+    return (
+        <canvas
+            {...props}
+            style={{ ...style, imageRendering: 'pixelated', width: '100%' }}
+            ref={canvas}
+            width={64}
+            height={32}
+        />
+    );
+};
+
 export const useLifecycle = () => {
-    const { load, start, stop, reset } = useContext(EmulatorContext);
+    const { create, start, stop, destroy } = useContext(EmulatorContext);
 
     return {
-        load,
+        create,
         start,
         stop,
-        reset,
+        destroy,
     };
 };
 
@@ -167,11 +200,13 @@ export const useIO = () => {
     };
 };
 
-export const useDebug = () => {
-    const { debug } = useContext(EmulatorContext);
+export const useStatus = () => {
+    const { debug, error, status } = useContext(EmulatorContext);
 
     return {
-        performance: debug?.performance,
+        ...(debug || {}),
+        error,
+        status,
     };
 };
 

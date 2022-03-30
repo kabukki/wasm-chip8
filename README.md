@@ -1,31 +1,30 @@
 # 💾 CHIP-8
 
-A **CHIP-8** emulator written in Rust, compiled to WebAssemly, and consumed by React.
+A **CHIP-8** emulator written in Rust, compiled to WebAssemly through [wasm-pack](https://github.com/rustwasm/wasm-pack), and consumed by React thanks to [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen).
 
 > CHIP-8 is an interpreted programming language, developed by Joseph Weisbecker. It was initially used on the COSMAC VIP and Telmac 1800 8-bit microcomputers in the mid-1970s. CHIP-8 programs are run on a CHIP-8 virtual machine. It was made to allow video games to be more easily programmed for these computers.
 
 ## Usage
 
-Wrap your application in the `EmulatorProvider`, and consume it through the `EmulatorContext` context.
+Wrap your application in the `EmulatorProvider`, and consume it through the provided hooks.
 
 ```jsx
-import React, { useContext } from 'react';
+import React from 'react';
 import { render } from 'react-dom';
-import { init, EmulatorProvider, useLifecycle, useIO } from '@kabukki/wasm-chip8';
+import { init, EmulatorProvider, Display, useLifecycle } from '@kabukki/wasm-chip8';
 
 export const App = () => {
-    const { load } = useLifecycle();
-    const { canvas } = useIO();
+    const { create } = useLifecycle();
 
     const onChange = async (e) => {
-        load(new Uint8Array(await e.target.files[0]?.arrayBuffer()));
+        create(new Uint8Array(await e.target.files[0]?.arrayBuffer()));
         e.preventDefault();
     };
 
     return (
         <main>
             <input type="file" onChange={onChange} />
-            <canvas ref={canvas} />
+            <Display />
         </main>
     );
 };
@@ -35,18 +34,47 @@ init().then(() => render(
         <App />
     </EmulatorProvider>,
     document.querySelector('#app'),
-));
+)).catch(console.error);
 ```
 
-## Toolchain
+### `EmulatorProvider`
 
-The emulator is written in Rust and compiled into a WebAssembly module through [wasm-pack](https://github.com/rustwasm/wasm-pack) and uses [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) to ease interoperability with the JavaScript environment. An extra layer wraps the produced package for convenience when consuming it in React.
+Wrap your app with this provider at the highest level where you want to use the emulator. It contains an emulator instance and internal logic that you can access in child components. Under the hood, a context is created but only accessible through hooks to maintain coherence in the exposed API.
 
-```
-.rs ---[wasm-pack]---> .wasm + JS glue code <-- React
-```
+### `Display`
 
-## Technical specifications
+The `Display` component is a simple canvas to which video output is drawn. You can customize it however you need to.
+
+### `useLifecycle`
+
+This hook provides functionality to control the emulator's lifecycle.
+
+- `create` create a new emulator with the provided ROM loaded into memory, and automatically start it
+- `start` resume emulator execution
+- `stop` stop emulator execution
+- `destroy` destroys the emulator instance
+
+### `useIO`
+
+This hook provides functionality to interact with input and output interfaces.
+
+- `input` send an input signal
+- `audio` methods to control audio output
+
+### `useStatus`
+
+This hook provides various information regarding emulator status.
+
+- `performance` measures of browser frame performance
+- `lastInstruction` the last instruction executed by the emulator
+- `error` error thrown during emulator execution, if any
+- `status` current emulator status
+    - `Status.NONE` no emulator instance
+    - `Status.RUNNING` emulator is running
+    - `Status.IDLE` emulator is paused
+    - `Status.ERROR` emulator encountered an error
+
+## Status
 
 ### ASI
 

@@ -54,6 +54,15 @@ export const useAudio = (type: OscillatorType = 'sine', frequency = 440) => {
         pause () {
             return oscillator.disconnect();
         },
+        volume (volume) {
+            gain.gain.value = volume;
+        },
+        type (type) {
+            oscillator.type = type;
+        },
+        frequency (frequency) {
+            oscillator.frequency.value = frequency;
+        },
     };
 };
 
@@ -65,16 +74,19 @@ export const useAnimationFrame = () => {
         stats: stats.current,
         start (callback) {
             const rafCallback = (timestamp) => {
-                console.log('rAF');
                 callback();
                 stats.current.record(timestamp);
-                handle.current = requestAnimationFrame(rafCallback);
+                // Don't run another frame if it has been canceled in the mean time
+                if (handle.current) {
+                    handle.current = requestAnimationFrame(rafCallback);
+                }
             };
         
             handle.current = requestAnimationFrame(rafCallback);
         },
         stop () {
             cancelAnimationFrame(handle.current);
+            handle.current = null;
         },
     };
 };

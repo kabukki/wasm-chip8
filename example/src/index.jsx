@@ -1,8 +1,11 @@
 import React, { StrictMode, useEffect, useState } from 'react';
 import { render } from 'react-dom';
-import { init, EmulatorProvider, useIO, useLifecycle, useDebug } from '@kabukki/wasm-chip8';
+import { init, EmulatorProvider, useIO, useLifecycle, useStatus, Status } from '@kabukki/wasm-chip8';
+import pretty from 'pretty-bytes';
 
-import { Keypad, Display } from './components';
+import { Keypad, Video, Audio, Performance, Indicator } from './components';
+
+import './index.css';
 
 const useInput = ({ keymap, onInput }) => {
     const [input, setInput] = useState(() => new Array(16).fill(false));
@@ -38,9 +41,9 @@ const useInput = ({ keymap, onInput }) => {
 };
 
 const App = () => {
-    const { load } = useLifecycle();
     const { input } = useIO();
-    const { performance } = useDebug();
+    const { status, error } = useStatus();
+    const { create, start, stop, destroy } = useLifecycle();
 
     const inputState = useInput({
         keymap: {
@@ -55,32 +58,45 @@ const App = () => {
     const onChange = async (e) => {
         const [file] = e.target.files;
         const buffer = new Uint8Array(await file?.arrayBuffer());
-        const fingerprint = new Uint8Array(await crypto.subtle.digest('SHA-256', buffer));
         
-        load(buffer);
-        
-        // Rom model on consumer frontend
-        console.log({
-            name: file.name,
-            buffer,
-            fingerprint,
-        });
+        create(buffer);
+        console.log(`Loaded ROM ${file.name} (${pretty(buffer.byteLength)})`);
 
         e.preventDefault();
     };
 
-    return (
-        <main>
-            WOW
-            <input type="file" onChange={onChange} />
-            <div>
-                <b>FPS: {performance?.fpsAverage}</b>
-                <Display />
-                <Keypad input={inputState} />
-                {/* {crt && <div className="absolute inset-0 crt" />} */}
-            </div>
-        </main>
-    );
+    if (status === Status.NONE) {
+        return (
+            <input type="file" onChange={onChange} style={{ display: 'block', margin: 'auto' }} />
+        );
+    } else if (status === Status.ERROR) {
+        return (
+            <main>
+                <b style={{ color: 'crimson' }}>Oops...</b>
+                <hr />
+                <pre>{error?.stack}</pre>
+                <input type="file" onChange={onChange} style={{ display: 'block', margin: 'auto' }} />
+            </main>
+        );
+    } else {
+        return (
+            <main style={{ display: 'flex', alignItems: 'center' }}>
+                <section>
+                    <Keypad input={inputState} style={{ display: 'block', height: '8em' }} />
+                    <Audio />
+                    <Performance />
+                </section>
+                <section style={{ flex: 1 }}>
+                    <Video />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1em' }}>
+                        <Indicator />
+                        {status === Status.RUNNING ? <button onClick={stop}>Stop</button> : <button onClick={start}>Start</button>}
+                        <button onClick={destroy}>Terminate</button>
+                    </div>
+                </section>
+            </main>
+        );
+    }
 };
 
 init().then(() => render(
@@ -90,4 +106,4 @@ init().then(() => render(
         </EmulatorProvider>
     </StrictMode>,
     document.querySelector('#app'),
-));
+)).catch(console.error);
