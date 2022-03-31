@@ -9,11 +9,13 @@ A **CHIP-8** emulator written in Rust, compiled to WebAssemly through [wasm-pack
 Wrap your application in the `EmulatorProvider`, and consume it through the provided hooks.
 
 ```jsx
-import React from 'react';
+import React, { useRef }from 'react';
 import { render } from 'react-dom';
-import { init, EmulatorProvider, Display, useLifecycle } from '@kabukki/wasm-chip8';
+import { init, EmulatorProvider, useIO, useLifecycle } from '@kabukki/wasm-chip8';
 
 export const App = () => {
+    const canvas = useRef(null);
+    const { frame } = useIO();
     const { create } = useLifecycle();
 
     const onChange = async (e) => {
@@ -21,10 +23,16 @@ export const App = () => {
         e.preventDefault();
     };
 
+    useEffect(() => {
+        if (frame) {
+            canvas.current.getContext('2d').putImageData(frame, 0, 0);
+        }
+    }, [frame]);
+
     return (
         <main>
             <input type="file" onChange={onChange} />
-            <Display />
+            <canvas ref={canvas} width={frame?.width} height={frame?.height} />
         </main>
     );
 };
@@ -41,10 +49,6 @@ init().then(() => render(
 
 Wrap your app with this provider at the highest level where you want to use the emulator. It contains an emulator instance and internal logic that you can access in child components. Under the hood, a context is created but only accessible through hooks to maintain coherence in the exposed API.
 
-### `Display`
-
-The `Display` component is a simple canvas to which video output is drawn. You can customize it however you need to.
-
 ### `useLifecycle`
 
 This hook provides functionality to control the emulator's lifecycle.
@@ -58,8 +62,9 @@ This hook provides functionality to control the emulator's lifecycle.
 
 This hook provides functionality to interact with input and output interfaces.
 
-- `input` send an input signal
+- `frame` the current video frame
 - `audio` methods to control audio output
+- `input` send an input signal
 
 ### `useStatus`
 

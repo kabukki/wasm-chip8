@@ -55,7 +55,7 @@ impl Chip8 {
     }
 
     pub fn get_framebuffer (&self) -> Vec<u8> {
-        self.display.framebuffer.iter().map(|&pixel| if pixel { 1 } else { 0 }).collect()
+        self.display.framebuffer.iter().flat_map(|&pixel| if pixel { [255, 255, 255, 255] } else { [0, 0, 0, 255] }).collect()
     }
 }
 

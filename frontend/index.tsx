@@ -1,4 +1,4 @@
-import React, { useRef, createContext, useState, useCallback, useContext, useEffect, MutableRefObject } from 'react';
+import React, { createContext, useState, useCallback, useContext, useEffect } from 'react';
 import throttle from 'lodash.throttle';
 import Statistics from 'game-stats/lib/interfaces/Statistics';
 
@@ -28,7 +28,7 @@ interface IDebug {
 }
 
 interface IEmulatorContext {
-    canvas: MutableRefObject<HTMLCanvasElement>;
+    frame: ImageData;
     audio: ReturnType<typeof useAudio>;
     debug: IDebug;
     error?: Error;
@@ -48,7 +48,7 @@ export const EmulatorContext = createContext<IEmulatorContext>(null);
 export const EmulatorProvider = ({ children }) => {
     const raf = useAnimationFrame();
     const audio = useAudio();
-    const canvas = useRef<HTMLCanvasElement>();
+    const [frame, setFrame] = useState(null);
     const [emulator, setEmulator] = useState<Chip8>(null);
     const [error, setError] = useState<Error>(null);
     const [debug, setDebug] = useState<IDebug>(null);
@@ -68,27 +68,13 @@ export const EmulatorProvider = ({ children }) => {
         }
     }, [emulator]);
 
-    const paint = () => {
-        if (canvas.current) {
-            const context = canvas.current.getContext('2d');
-            const framebuffer = emulator.get_framebuffer();
-    
-            for (let y = 0; y < context.canvas.height; y++) {
-                for (let x = 0; x < context.canvas.width; x++) {
-                    context.fillStyle = framebuffer[x + y * context.canvas.width] === 1 ? 'white' : 'black';
-                    context.fillRect(x, y, 1, 1);
-                }
-            }
-        } else {
-            console.warn('Canvas ref is never used');
-        }
-    };
+    const getFrame = () => new ImageData(new Uint8ClampedArray(emulator.get_framebuffer()), 64, 32);
 
     const cycle = () => {
         try {
             const lastInstruction = cycleCPU();
             cycleTimers();
-            paint();
+            setFrame(getFrame());
             setDebug((previous) => ({
                 ...previous,
                 performance: raf.stats.stats(),
@@ -149,7 +135,7 @@ export const EmulatorProvider = ({ children }) => {
     
     return (
         <EmulatorContext.Provider value={{
-            canvas,
+            frame,
             audio,
             debug,
             error,
@@ -165,20 +151,6 @@ export const EmulatorProvider = ({ children }) => {
     );
 };
 
-export const Display = ({ style = {}, ...props }) => {
-    const { canvas } = useContext(EmulatorContext);
-
-    return (
-        <canvas
-            {...props}
-            style={{ ...style, imageRendering: 'pixelated', width: '100%' }}
-            ref={canvas}
-            width={64}
-            height={32}
-        />
-    );
-};
-
 export const useLifecycle = () => {
     const { create, start, stop, destroy } = useContext(EmulatorContext);
 
@@ -191,12 +163,12 @@ export const useLifecycle = () => {
 };
 
 export const useIO = () => {
-    const { input, canvas, audio } = useContext(EmulatorContext);
+    const { input, frame, audio } = useContext(EmulatorContext);
 
     return {
-        input,
-        canvas,
+        frame,
         audio,
+        input,
     };
 };
 
