@@ -67,7 +67,7 @@ export const useAudio = (type: OscillatorType = 'sine', frequency = 440) => {
 };
 
 export const useAnimationFrame = () => {
-    const stats = useRef(new GameStats());
+    const stats = useRef(new GameStats({ historyLimit: 100 }));
     const handle = useRef<ReturnType<typeof requestAnimationFrame>>();
 
     return {

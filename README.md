@@ -4,6 +4,16 @@ A **CHIP-8** emulator written in Rust, compiled to WebAssemly through [wasm-pack
 
 > CHIP-8 is an interpreted programming language, developed by Joseph Weisbecker. It was initially used on the COSMAC VIP and Telmac 1800 8-bit microcomputers in the mid-1970s. CHIP-8 programs are run on a CHIP-8 virtual machine. It was made to allow video games to be more easily programmed for these computers.
 
+## Status
+
+### ASI
+
+✅ All 35 opcodes are implemented.
+
+### Known limitations
+
+*TODO*
+
 ## Usage
 
 Wrap your application in the `EmulatorProvider`, and consume it through the provided hooks.
@@ -71,23 +81,14 @@ This hook provides functionality to interact with input and output interfaces.
 This hook provides various information regarding emulator status.
 
 - `performance` measures of browser frame performance
-- `lastInstruction` the last instruction executed by the emulator
+- `cpu` CPU state
+- `keypad` keypad state
 - `error` error thrown during emulator execution, if any
 - `status` current emulator status
     - `Status.NONE` no emulator instance
     - `Status.RUNNING` emulator is running
     - `Status.IDLE` emulator is paused
     - `Status.ERROR` emulator encountered an error
-
-## Status
-
-### ASI
-
-All 35 opcodes are implemented.
-
-### Known limitations
-
-*TODO*
 
 ## Resources
 

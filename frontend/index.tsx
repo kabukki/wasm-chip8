@@ -1,8 +1,7 @@
-import React, { createContext, useState, useCallback, useContext, useEffect } from 'react';
-import throttle from 'lodash.throttle';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import Statistics from 'game-stats/lib/interfaces/Statistics';
 
-import initWasm, { Chip8, set_panic_hook } from '../backend/pkg';
+import initWasm, { Chip8, Chip8Debug, set_panic_hook } from '../backend/pkg';
 import wasm from '../backend/pkg/index_bg.wasm';
 import { useAudio, useAnimationFrame } from './hooks';
 
@@ -25,6 +24,7 @@ export enum Status {
 
 interface IDebug {
     performance: Statistics;
+    vm: Chip8Debug;
 }
 
 interface IEmulatorContext {
@@ -54,31 +54,22 @@ export const EmulatorProvider = ({ children }) => {
     const [debug, setDebug] = useState<IDebug>(null);
     const [status, setStatus] = useState<Status>(Status.NONE);
 
-    const cycleCPU = useCallback(throttle(() => {
-        return emulator.cycle_cpu();
-    }, 1000 / 500), [emulator]);
-
-    const cycleTimers = useCallback(() => {
-        emulator.cycle_timers();
-    
-        if (emulator.beep()) {
-            audio.play();
-        } else {
-            audio.pause();
-        }
-    }, [emulator]);
-
-    const getFrame = () => new ImageData(new Uint8ClampedArray(emulator.get_framebuffer()), 64, 32);
-
     const cycle = () => {
         try {
-            const lastInstruction = cycleCPU();
-            cycleTimers();
-            setFrame(getFrame());
+            emulator.cycle_cpu();
+            emulator.cycle_timers();
+    
+            if (emulator.beep()) {
+                audio.play();
+            } else {
+                audio.pause();
+            }
+
+            setFrame(new ImageData(new Uint8ClampedArray(emulator.get_framebuffer()), 64, 32));
             setDebug((previous) => ({
                 ...previous,
+                vm: emulator.get_debug(),
                 performance: raf.stats.stats(),
-                lastInstruction,
             }));
         } catch (err) {
             stop(err);
@@ -130,6 +121,7 @@ export const EmulatorProvider = ({ children }) => {
             return stop;
         } else {
             setStatus(Status.NONE);
+            setDebug(null);
         }
     }, [emulator]);
     
@@ -176,7 +168,9 @@ export const useStatus = () => {
     const { debug, error, status } = useContext(EmulatorContext);
 
     return {
-        ...(debug || {}),
+        cpu: debug?.vm.cpu,
+        keypad: debug?.vm.keypad,
+        performance: debug?.performance,
         error,
         status,
     };
@@ -189,7 +183,6 @@ export const meta = {
     generation: null,
     wikipedia: 'https://en.wikipedia.org/wiki/CHIP-8',
     github: 'https://github.com/kabukki/wasm-chip8',
-    path: '/other/chip8',
     picture,
     content,
 };
