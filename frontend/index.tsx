@@ -19,15 +19,13 @@ export enum Status {
     ERROR,
 }
 
-interface IDebug {
-    vm: Chip8Debug;
-    performance: Statistics;
-}
-
 interface IEmulatorContext {
     frame: ImageData;
     audio: ReturnType<typeof useAudio>;
-    debug: IDebug;
+    debug: {
+        vm: Chip8Debug;
+        performance: Statistics;
+    };
     error?: Error;
     status: Status;
     input (key: Button, state: boolean): void;
@@ -46,10 +44,10 @@ export const EmulatorProvider = ({ children }) => {
     const raf = useAnimationFrame();
     const audio = useAudio();
     const [frame, setFrame] = useState(null);
-    const [emulator, setEmulator] = useState<Chip8>(null);
-    const [error, setError] = useState<Error>(null);
-    const [debug, setDebug] = useState<IDebug>(null);
-    const [status, setStatus] = useState<Status>(Status.NONE);
+    const [emulator, setEmulator] = useState(null);
+    const [error, setError] = useState(null);
+    const [debug, setDebug] = useState(null);
+    const [status, setStatus] = useState(Status.NONE);
 
     const cycle = () => {
         try {

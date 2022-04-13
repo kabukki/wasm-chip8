@@ -80,7 +80,6 @@ impl Cpu {
             (instruction.opcode & 0x000F),
         );
         
-        println!("tick");
         self.pc += 2;
 
         match nibbles {
