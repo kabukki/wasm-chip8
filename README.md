@@ -1,6 +1,6 @@
 # 💾 CHIP-8
 
-A **CHIP-8** emulator written in Rust, compiled to WebAssemly through [wasm-pack](https://github.com/rustwasm/wasm-pack), and consumed by React thanks to [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen).
+A **CHIP-8** emulator written in <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/rust.svg"/> Rust, compiled to <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/wasm.svg"/> WebAssemly through [wasm-pack](https://github.com/rustwasm/wasm-pack), and exposed with <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/react.svg"/> React thanks to [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen).
 
 > CHIP-8 is an interpreted programming language, developed by Joseph Weisbecker. It was initially used on the COSMAC VIP and Telmac 1800 8-bit microcomputers in the mid-1970s. CHIP-8 programs are run on a CHIP-8 virtual machine. It was made to allow video games to be more easily programmed for these computers.
 
@@ -55,18 +55,28 @@ init().then(() => render(
 )).catch(console.error);
 ```
 
+### `init`
+
+The `init` function is essential to instantiate the emulator because it sets up the WebAssembly module to be used. Call it as soon as you want to use the library.
+
 ### `EmulatorProvider`
 
 Wrap your app with this provider at the highest level where you want to use the emulator. It contains an emulator instance and internal logic that you can access in child components. Under the hood, a context is created but only accessible through hooks to maintain coherence in the exposed API.
 
 ### `useLifecycle`
 
-This hook provides functionality to control the emulator's lifecycle.
+This hook provides insight and functionality to control the emulator's lifecycle.
 
 - `create` create a new emulator with the provided ROM loaded into memory, and automatically start it
 - `start` resume emulator execution
 - `stop` stop emulator execution
 - `destroy` destroys the emulator instance
+- `error` error thrown during emulator execution, if any
+- `status` current emulator status
+    - `Status.NONE` no emulator instance
+    - `Status.RUNNING` emulator is running
+    - `Status.IDLE` emulator is paused
+    - `Status.ERROR` emulator encountered an error
 
 ### `useIO`
 
@@ -76,19 +86,13 @@ This hook provides functionality to interact with input and output interfaces.
 - `audio` methods to control audio output
 - `input` send an input signal
 
-### `useStatus`
+### `useDebug`
 
-This hook provides various information regarding emulator status.
+This hook provides various information regarding emulation status.
 
-- `performance` measures of browser frame performance
 - `cpu` CPU state
 - `keypad` keypad state
-- `error` error thrown during emulator execution, if any
-- `status` current emulator status
-    - `Status.NONE` no emulator instance
-    - `Status.RUNNING` emulator is running
-    - `Status.IDLE` emulator is paused
-    - `Status.ERROR` emulator encountered an error
+- `performance` measures of browser frame performance
 
 ## Resources
 

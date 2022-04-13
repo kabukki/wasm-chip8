@@ -1,12 +1,9 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import Statistics from 'game-stats/lib/interfaces/Statistics';
 
-import initWasm, { Chip8, Chip8Debug, set_panic_hook } from '../backend/pkg';
 import wasm from '../backend/pkg/index_bg.wasm';
+import initWasm, { Chip8, Chip8Debug, set_panic_hook } from '../backend/pkg';
 import { useAudio, useAnimationFrame } from './hooks';
-
-import picture from './assets/picture.png';
-import content from './assets/content.png';
 
 export type Button = (
     0x0 | 0x1 | 0x2 | 0x3 |
@@ -23,8 +20,8 @@ export enum Status {
 }
 
 interface IDebug {
-    performance: Statistics;
     vm: Chip8Debug;
+    performance: Statistics;
 }
 
 interface IEmulatorContext {
@@ -66,8 +63,7 @@ export const EmulatorProvider = ({ children }) => {
             }
 
             setFrame(new ImageData(new Uint8ClampedArray(emulator.get_framebuffer()), 64, 32));
-            setDebug((previous) => ({
-                ...previous,
+            setDebug(() => ({
                 vm: emulator.get_debug(),
                 performance: raf.stats.stats(),
             }));
@@ -144,13 +140,15 @@ export const EmulatorProvider = ({ children }) => {
 };
 
 export const useLifecycle = () => {
-    const { create, start, stop, destroy } = useContext(EmulatorContext);
+    const { create, start, stop, destroy, error, status } = useContext(EmulatorContext);
 
     return {
         create,
         start,
         stop,
         destroy,
+        error,
+        status,
     };
 };
 
@@ -164,27 +162,14 @@ export const useIO = () => {
     };
 };
 
-export const useStatus = () => {
-    const { debug, error, status } = useContext(EmulatorContext);
+export const useDebug = () => {
+    const { debug } = useContext(EmulatorContext);
 
     return {
         cpu: debug?.vm.cpu,
         keypad: debug?.vm.keypad,
         performance: debug?.performance,
-        error,
-        status,
     };
-};
-
-export const meta = {
-    name: 'CHIP-8',
-    developer: 'Weisbecker',
-    year: 1978,
-    generation: null,
-    wikipedia: 'https://en.wikipedia.org/wiki/CHIP-8',
-    github: 'https://github.com/kabukki/wasm-chip8',
-    picture,
-    content,
 };
 
 export const init = async () => {

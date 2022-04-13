@@ -6,12 +6,12 @@
     "dist/*"
   ],
   "scripts": {
-    "back:build": "cd backend && wasm-pack build --profiling --target web --out-name index",
-    "back:watch": "cd backend && cargo watch -i pkg -s 'wasm-pack build --profiling --target web --out-name index'",
-    "front:build": "esbuild frontend/index.tsx --bundle --outdir=dist --sourcemap --format=esm --loader:.png=dataurl --loader:.wasm=dataurl --external:react",
-    "front:watch": "esbuild frontend/index.tsx --bundle --outdir=dist --sourcemap --format=esm --loader:.png=dataurl --loader:.wasm=dataurl --external:react --watch",
-    "build": "npm run back:build && npm run front:build",
-    "watch": "concurrently -c red.bold,yellow.bold -n back,front npm:back:watch npm:front:watch",
+    "build:back": "cd backend && wasm-pack build --profiling --target web --out-name index",
+    "build:front": "esbuild frontend/index.tsx --bundle --outdir=dist --sourcemap --format=esm --loader:.wasm=dataurl --external:react",
+    "build": "npm run build:back && npm run build:front",
+    "watch:back": "cd backend && cargo watch -i pkg -s 'wasm-pack build --profiling --target web --out-name index'",
+    "watch:front": "esbuild frontend/index.tsx --bundle --outdir=dist --sourcemap --format=esm --loader:.wasm=dataurl --external:react --watch",
+    "watch": "concurrently -c red.bold,yellow.bold -n back,front npm:watch:back npm:watch:front",
     "prepack": "npm run build"
   },
   "dependencies": {
