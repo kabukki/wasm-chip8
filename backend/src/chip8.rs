@@ -1,15 +1,11 @@
-extern crate console_error_panic_hook;
-
 use wasm_bindgen::prelude::*;
-use crate::display::Display;
-use crate::memory::Memory;
-use crate::cpu::{Cpu, Instruction};
-use crate::keypad::Keypad;
-
-pub mod cpu;
-pub mod memory;
-pub mod display;
-pub mod keypad;
+use crate::{
+    display::Display,
+    memory::Memory,
+    cpu::{Cpu, debug::CpuDebug},
+    keypad::{Keypad, debug::KeypadDebug},
+    debug::Probe,
+};
 
 #[wasm_bindgen]
 pub struct Chip8 {
@@ -34,12 +30,12 @@ impl Chip8 {
         emulator
     }
 
-    pub fn cycle_cpu (&mut self) -> Instruction {
+    pub fn cycle_cpu (&mut self) {
         self.cpu.tick(
             &mut self.memory,
             &mut self.display,
             &mut self.keypad,
-        )
+        );
     }
 
     pub fn cycle_timers (&mut self) {
@@ -55,11 +51,32 @@ impl Chip8 {
     }
 
     pub fn get_framebuffer (&self) -> Vec<u8> {
-        self.display.framebuffer.iter().map(|&pixel| if pixel { 1 } else { 0 }).collect()
+        self.display.framebuffer.iter().flat_map(|&pixel| if pixel { [255, 255, 255, 255] } else { [0, 0, 0, 255] }).collect()
+    }
+
+    pub fn get_debug (&self) -> Chip8Debug {
+        Chip8Debug {
+            cpu: self.cpu.get_debug(),
+            keypad: self.keypad.get_debug(),
+        }
     }
 }
 
 #[wasm_bindgen]
-pub fn set_panic_hook () {
-    console_error_panic_hook::set_once();
+pub struct Chip8Debug {
+    cpu: CpuDebug,
+    keypad: KeypadDebug,
+}
+
+#[wasm_bindgen]
+impl Chip8Debug {
+    #[wasm_bindgen(getter)]
+    pub fn cpu (&self) -> CpuDebug {
+        self.cpu.to_owned()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn keypad (&self) -> KeypadDebug {
+        self.keypad.to_owned()
+    }
 }

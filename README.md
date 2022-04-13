@@ -1,28 +1,98 @@
 # 💾 CHIP-8
 
-A **CHIP-8** emulator written in Rust compiled to WebAssemly for usage on the web.
+A **CHIP-8** emulator written in <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/rust.svg"/> Rust, compiled to <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/wasm.svg"/> WebAssemly through [wasm-pack](https://github.com/rustwasm/wasm-pack), and exposed with <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/react.svg"/> React thanks to [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen).
 
 > CHIP-8 is an interpreted programming language, developed by Joseph Weisbecker. It was initially used on the COSMAC VIP and Telmac 1800 8-bit microcomputers in the mid-1970s. CHIP-8 programs are run on a CHIP-8 virtual machine. It was made to allow video games to be more easily programmed for these computers.
 
-## Toolchain
-
-The emulator is written in Rust and compiled into a WebAssembly module through [wasm-pack](https://github.com/rustwasm/wasm-pack) and uses [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) to ease interoperability with the JavaScript environment. A custom JavaScript file wraps the produced package for convenience when consuming it in JavaScript.
-
-```
-.rs ---[wasm-pack]---> .wasm <--> JS wrapper <--- JS
-```
-
-The emitted JS wrapper is distributed as an ES Module.
-
-## Technical specifications
+## Status
 
 ### ASI
 
-All 35 opcodes are implemented.
+✅ All 35 opcodes are implemented.
 
 ### Known limitations
 
 *TODO*
+
+## Usage
+
+Wrap your application in the `EmulatorProvider`, and consume it through the provided hooks.
+
+```jsx
+import React, { useRef }from 'react';
+import { render } from 'react-dom';
+import { init, EmulatorProvider, useIO, useLifecycle } from '@kabukki/wasm-chip8';
+
+export const App = () => {
+    const canvas = useRef(null);
+    const { frame } = useIO();
+    const { create } = useLifecycle();
+
+    const onChange = async (e) => {
+        create(new Uint8Array(await e.target.files[0]?.arrayBuffer()));
+        e.preventDefault();
+    };
+
+    useEffect(() => {
+        if (frame) {
+            canvas.current.getContext('2d').putImageData(frame, 0, 0);
+        }
+    }, [frame]);
+
+    return (
+        <main>
+            <input type="file" onChange={onChange} />
+            <canvas ref={canvas} width={frame?.width} height={frame?.height} />
+        </main>
+    );
+};
+
+init().then(() => render(
+    <EmulatorProvider>
+        <App />
+    </EmulatorProvider>,
+    document.querySelector('#app'),
+)).catch(console.error);
+```
+
+### `init`
+
+The `init` function is essential to instantiate the emulator because it sets up the WebAssembly module to be used. Call it as soon as you want to use the library.
+
+### `EmulatorProvider`
+
+Wrap your app with this provider at the highest level where you want to use the emulator. It contains an emulator instance and internal logic that you can access in child components. Under the hood, a context is created but only accessible through hooks to maintain coherence in the exposed API.
+
+### `useLifecycle`
+
+This hook provides insight and functionality to control the emulator's lifecycle.
+
+- `create` create a new emulator with the provided ROM loaded into memory, and automatically start it
+- `start` resume emulator execution
+- `stop` stop emulator execution
+- `destroy` destroys the emulator instance
+- `error` error thrown during emulator execution, if any
+- `status` current emulator status
+    - `Status.NONE` no emulator instance
+    - `Status.RUNNING` emulator is running
+    - `Status.IDLE` emulator is paused
+    - `Status.ERROR` emulator encountered an error
+
+### `useIO`
+
+This hook provides functionality to interact with input and output interfaces.
+
+- `frame` the current video frame
+- `audio` methods to control audio output
+- `input` send an input signal
+
+### `useDebug`
+
+This hook provides various information regarding emulation status.
+
+- `cpu` CPU state
+- `keypad` keypad state
+- `performance` measures of browser frame performance
 
 ## Resources
 

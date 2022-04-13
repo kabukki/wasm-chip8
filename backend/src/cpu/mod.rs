@@ -1,8 +1,12 @@
 use wasm_bindgen::prelude::*;
 use js_sys::Math;
-use crate::memory::{Memory, PROGRAM_START, RESERVED_START};
-use crate::display::Display;
-use crate::keypad::Keypad;
+use crate::{
+    memory::{Memory, PROGRAM_START, RESERVED_START},
+    display::Display,
+    keypad::Keypad,
+};
+
+pub mod debug;
 
 pub const CLOCK_RATE: f32 = 1000.0 / 500.0; // 500 Hz
 pub const TIMER_RATE: f32 = 1000.0 / 60.0; // 60 Hz
@@ -176,7 +180,7 @@ impl Cpu {
                     self.v[n as usize] = memory.ram[self.i as usize + n as usize];
                 }
             },
-            (..) => panic!("Unknown instruction"),
+            (..) => panic!("Unknown instruction {:02X}", instruction.opcode),
         }
 
         return instruction;
