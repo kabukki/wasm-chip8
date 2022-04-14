@@ -1,12 +1,14 @@
-use wasm_bindgen::prelude::*;
 use js_sys::Math;
 use crate::{
     memory::{Memory, PROGRAM_START, RESERVED_START},
     display::Display,
     keypad::Keypad,
+    cpu::instruction::Instruction,
 };
 
 pub mod debug;
+pub mod instruction;
+pub mod disassembly;
 
 pub const CLOCK_RATE: f32 = 1000.0 / 500.0; // 500 Hz
 pub const TIMER_RATE: f32 = 1000.0 / 60.0; // 60 Hz
@@ -72,14 +74,14 @@ impl Cpu {
     }
 
     pub fn tick (&mut self, memory: &mut Memory, display: &mut Display, keypad: &Keypad) -> Instruction {
-        let instruction = Instruction::new((memory.ram[self.pc as usize] as u16) << 8 | (memory.ram[self.pc as usize + 1] as u16));
+        let instruction = memory.fetch(self.pc as usize);
         let nibbles = (
             (instruction.opcode & 0xF000) >> 12,
             (instruction.opcode & 0x0F00) >> 8,
             (instruction.opcode & 0x00F0) >> 4,
             (instruction.opcode & 0x000F),
         );
-        
+
         self.pc += 2;
 
         match nibbles {
@@ -188,56 +190,5 @@ impl Cpu {
 
     pub fn beep (&self) -> bool {
         return self.st > 0;
-    }
-}
-
-#[wasm_bindgen]
-pub struct Instruction {
-    /**
-     * Raw opcode
-     */
-    pub opcode: u16,
-
-    /**
-     * A 12-bit value, the lowest 12 bits of the instruction
-     */
-    pub nnn: u16,
-    
-    /**
-     * An 8-bit value, the lowest 8 bits of the instruction
-     */
-    pub nn: u8,
-
-    /**
-     * A 4-bit value, the lowest 4 bits of the instruction
-     */
-    pub n: u8,
-
-    /**
-     * A 4-bit value, the lower 4 bits of the high byte of the instruction
-     */
-    pub x: usize,
-
-    /**
-     * A 4-bit value, the upper 4 bits of the low byte of the instruction
-     */
-    pub y: usize,
-}
-
-/**
- * Variables typology: x, y, n, nn, nnn
- * http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3.0
- */
-#[wasm_bindgen]
-impl Instruction {
-    pub fn new (opcode: u16) -> Self {
-        return Instruction {
-            opcode,
-            nnn: opcode & 0x0FFF,
-            nn: (opcode & 0x00FF) as u8,
-            n: (opcode & 0x000F) as u8,
-            x: ((opcode & 0x0F00) >> 8) as usize,
-            y: ((opcode & 0x00F0) >> 4) as usize,
-        };
     }
 }

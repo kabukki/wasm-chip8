@@ -5,7 +5,7 @@ pub mod cpu;
 pub mod memory;
 pub mod display;
 pub mod keypad;
-pub mod chip8;
+pub mod emulator;
 
 #[wasm_bindgen]
 pub fn set_panic_hook () {

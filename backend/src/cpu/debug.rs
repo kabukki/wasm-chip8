@@ -1,11 +1,10 @@
-use wasm_bindgen::prelude::*;
+use serde::Serialize;
 use crate::{
     debug::Probe,
     cpu::Cpu,
 };
 
-#[wasm_bindgen]
-#[derive(Clone)]
+#[derive(Serialize)]
 pub struct CpuDebug {
     v: [u8; 16],
     i: u16,
@@ -14,44 +13,6 @@ pub struct CpuDebug {
     sp: usize,
     dt: u8,
     st: u8,
-}
-
-#[wasm_bindgen]
-impl CpuDebug {
-    #[wasm_bindgen(getter)]
-    pub fn v (&self) -> Vec<u8> {
-        self.v.to_vec()
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn i (&self) -> u16 {
-        self.i
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn pc (&self) -> u16 {
-        self.pc
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn stack (&self) -> Vec<u16> {
-        self.stack.to_vec()
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn sp (&self) -> usize {
-        self.sp
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn dt (&self) -> u8 {
-        self.dt
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn st (&self) -> u8 {
-        self.st
-    }
 }
 
 impl Probe<CpuDebug> for Cpu {

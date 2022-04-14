@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import Statistics from 'game-stats/lib/interfaces/Statistics';
 
 import wasm from '../backend/pkg/index_bg.wasm';
-import initWasm, { Chip8, Chip8Debug, set_panic_hook } from '../backend/pkg';
+import initWasm, { Emulator, set_panic_hook } from '../backend/pkg';
 import { useAudio, useAnimationFrame } from './hooks';
 
 export type Button = (
@@ -23,7 +23,7 @@ interface IEmulatorContext {
     frame: ImageData;
     audio: ReturnType<typeof useAudio>;
     debug: {
-        vm: Chip8Debug;
+        emulator: ReturnType<Emulator['get_debug']>;
         performance: Statistics;
     };
     error?: Error;
@@ -62,7 +62,7 @@ export const EmulatorProvider = ({ children }) => {
 
             setFrame(new ImageData(new Uint8ClampedArray(emulator.get_framebuffer()), 64, 32));
             setDebug(() => ({
-                vm: emulator.get_debug(),
+                emulator: emulator.get_debug(),
                 performance: raf.stats.stats(),
             }));
         } catch (err) {
@@ -72,7 +72,7 @@ export const EmulatorProvider = ({ children }) => {
 
     const create = async (rom: Uint8Array) => {
         try {
-            const emulator = Chip8.new(rom);
+            const emulator = Emulator.new(rom);
             setError(null);
             setDebug(null);
             setEmulator(emulator);
@@ -164,8 +164,9 @@ export const useDebug = () => {
     const { debug } = useContext(EmulatorContext);
 
     return {
-        cpu: debug?.vm.cpu,
-        keypad: debug?.vm.keypad,
+        cpu: debug?.emulator.cpu,
+        keypad: debug?.emulator.keypad,
+        memory: debug?.emulator.memory,
         performance: debug?.performance,
     };
 };

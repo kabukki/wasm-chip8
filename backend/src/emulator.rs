@@ -1,14 +1,15 @@
 use wasm_bindgen::prelude::*;
+use serde::Serialize;
 use crate::{
+    debug::Probe,
     display::Display,
-    memory::Memory,
+    memory::{Memory, debug::MemoryDebug},
     cpu::{Cpu, debug::CpuDebug},
     keypad::{Keypad, debug::KeypadDebug},
-    debug::Probe,
 };
 
 #[wasm_bindgen]
-pub struct Chip8 {
+pub struct Emulator {
     cpu: Cpu,
     memory: Memory,
     display: Display,
@@ -16,7 +17,7 @@ pub struct Chip8 {
 }
 
 #[wasm_bindgen]
-impl Chip8 {
+impl Emulator {
     pub fn new (rom: &[u8]) -> Self {
         let mut emulator = Self {
             cpu: Cpu::new(),
@@ -54,29 +55,22 @@ impl Chip8 {
         self.display.framebuffer.iter().flat_map(|&pixel| if pixel { [255, 255, 255, 255] } else { [0, 0, 0, 255] }).collect()
     }
 
-    pub fn get_debug (&self) -> Chip8Debug {
-        Chip8Debug {
+    /**
+     * Not implemented through Probe trait because impls are not yet supported by wasm-bindgen.
+     * https://github.com/rustwasm/wasm-bindgen/issues/2073
+     */
+    pub fn get_debug (&self) -> JsValue {
+        JsValue::from_serde(&Debug {
             cpu: self.cpu.get_debug(),
             keypad: self.keypad.get_debug(),
-        }
+            memory: self.memory.get_debug(),
+        }).unwrap()
     }
 }
 
-#[wasm_bindgen]
-pub struct Chip8Debug {
+#[derive(Serialize)]
+pub struct Debug {
     cpu: CpuDebug,
     keypad: KeypadDebug,
-}
-
-#[wasm_bindgen]
-impl Chip8Debug {
-    #[wasm_bindgen(getter)]
-    pub fn cpu (&self) -> CpuDebug {
-        self.cpu.to_owned()
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn keypad (&self) -> KeypadDebug {
-        self.keypad.to_owned()
-    }
+    memory: MemoryDebug,
 }
