@@ -3,7 +3,7 @@ use crate::{
     cpu::instruction::Instruction,
 };
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Disassembly {
     address: u16,
     opcode: String,

@@ -3,13 +3,17 @@ use crate::{
     memory::{Memory, PROGRAM_START, RESERVED_START},
     display::Display,
     keypad::Keypad,
-    cpu::instruction::Instruction,
     clock::ClockDivider,
+    cpu::{
+        instruction::Instruction,
+        log::Log,
+    },
 };
 
 pub mod debug;
 pub mod instruction;
 pub mod disassembly;
+pub mod log;
 
 pub struct Cpu {
     v: [u8; 16],
@@ -21,6 +25,7 @@ pub struct Cpu {
     st: u8,
     pub clock: ClockDivider,
     pub clock_timer: ClockDivider,
+    logs: Vec<Log>,
 }
 
 impl Cpu {
@@ -35,6 +40,7 @@ impl Cpu {
             st: 0,
             clock: ClockDivider::new(crate::clock::CLOCK_CPU),
             clock_timer: ClockDivider::new(crate::clock::CLOCK_TIMER),
+            logs: Vec::new(),
         };
     }
     
@@ -50,14 +56,26 @@ impl Cpu {
 
     pub fn cycle (&mut self, memory: &mut Memory, display: &mut Display, keypad: &Keypad) -> Instruction {
         let instruction = memory.fetch(self.pc as usize);
+
+        self.logs.insert(0, Log {
+            cycles: self.clock.cycles,
+            disassembly: disassembly::Disassembly::new(instruction.clone(), self.pc),
+            pc: self.pc,
+            sp: self.sp,
+            dt: self.dt,
+            st: self.st,
+            v: self.v,
+            i: self.i,
+        });
+        self.logs.truncate(40);
+        self.pc += 2;
+
         let nibbles = (
             (instruction.opcode & 0xF000) >> 12,
             (instruction.opcode & 0x0F00) >> 8,
             (instruction.opcode & 0x00F0) >> 4,
             (instruction.opcode & 0x000F),
         );
-
-        self.pc += 2;
 
         match nibbles {
             (0, 0, 0xE, 0) => display.clear(),
