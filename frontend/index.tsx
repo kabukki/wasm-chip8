@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import Statistics from 'game-stats/lib/interfaces/Statistics';
 
 import wasm from '../backend/pkg/index_bg.wasm';
@@ -30,6 +30,8 @@ interface IEmulatorContext {
     status: Status;
     input (key: Button, state: boolean): void;
     create (rom: Uint8Array): void;
+    cycleCpu (): void;
+    cycleTimer (): void;
     start (): void;
     stop (error?: Error): void;
     destroy (): void;
@@ -49,10 +51,9 @@ export const EmulatorProvider = ({ children }) => {
     const [debug, setDebug] = useState(null);
     const [status, setStatus] = useState(Status.NONE);
 
-    const cycle = () => {
+    const wrapCycle = (cycle) => () => {
         try {
-            emulator.cycle_cpu();
-            emulator.cycle_timers();
+            cycle();
     
             if (emulator.beep()) {
                 audio.play();
@@ -70,6 +71,9 @@ export const EmulatorProvider = ({ children }) => {
         }
     };
 
+    const cycleCpu = useCallback(wrapCycle(emulator?.cycle_until_cpu.bind(emulator)), [emulator]);
+    const cycleTimer = useCallback(wrapCycle(emulator?.cycle_until_timer.bind(emulator)), [emulator]);
+    
     const create = async (rom: Uint8Array) => {
         try {
             const emulator = Emulator.new(rom);
@@ -83,7 +87,7 @@ export const EmulatorProvider = ({ children }) => {
     };
 
     const start = () => {
-        raf.start(cycle);
+        raf.start(cycleTimer);
         audio.start();
         setStatus(Status.RUNNING);
     };
@@ -127,6 +131,8 @@ export const EmulatorProvider = ({ children }) => {
             error,
             status,
             create,
+            cycleCpu,
+            cycleTimer,
             start,
             stop,
             destroy,
@@ -138,10 +144,12 @@ export const EmulatorProvider = ({ children }) => {
 };
 
 export const useLifecycle = () => {
-    const { create, start, stop, destroy, error, status } = useContext(EmulatorContext);
+    const { create, cycleCpu, cycleTimer, start, stop, destroy, error, status } = useContext(EmulatorContext);
 
     return {
         create,
+        cycleCpu,
+        cycleTimer,
         start,
         stop,
         destroy,
@@ -164,9 +172,7 @@ export const useDebug = () => {
     const { debug } = useContext(EmulatorContext);
 
     return {
-        cpu: debug?.emulator.cpu,
-        keypad: debug?.emulator.keypad,
-        memory: debug?.emulator.memory,
+        emulator: debug?.emulator,
         performance: debug?.performance,
     };
 };

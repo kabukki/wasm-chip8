@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 
 pub mod debug;
+pub mod clock;
 pub mod cpu;
 pub mod memory;
 pub mod display;

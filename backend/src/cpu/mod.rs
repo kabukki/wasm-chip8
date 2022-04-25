@@ -4,50 +4,23 @@ use crate::{
     display::Display,
     keypad::Keypad,
     cpu::instruction::Instruction,
+    clock::ClockDivider,
 };
 
 pub mod debug;
 pub mod instruction;
 pub mod disassembly;
 
-pub const CLOCK_RATE: f32 = 1000.0 / 500.0; // 500 Hz
-pub const TIMER_RATE: f32 = 1000.0 / 60.0; // 60 Hz
-
 pub struct Cpu {
-    /**
-     * Registers
-     */
     v: [u8; 16],
-
-    /**
-     * Address register
-     */
     i: u16,
-
-    /**
-     * Program counter
-     */
     pc: u16,
-
-    /**
-     * Stack containing program counters before jumping
-     */
     stack: [u16; 16],
-
-    /**
-     * Stack pointer
-     */
     sp: usize,
-
-    /**
-     * Delay timer
-     */
     dt: u8,
-
-    /**
-     * Sound timer. The system’s buzzer sounds whenever the sound timer reaches zero
-     */
     st: u8,
+    pub clock: ClockDivider,
+    pub clock_timer: ClockDivider,
 }
 
 impl Cpu {
@@ -60,20 +33,22 @@ impl Cpu {
             sp: 0,
             dt: 0,
             st: 0,
+            clock: ClockDivider::new(crate::clock::CLOCK_CPU),
+            clock_timer: ClockDivider::new(crate::clock::CLOCK_TIMER),
         };
     }
     
-    pub fn cycle_timers (&mut self) {
-        if self.dt > 0 {
-            self.dt -= 1;
+    pub fn tick (&mut self, time: f64, memory: &mut Memory, display: &mut Display, keypad: &Keypad) {
+        if self.clock.tick(time) {
+            self.cycle(memory, display, keypad);
         }
-        
-        if self.st > 0 {
-            self.st -= 1;
+
+        if self.clock_timer.tick(time) {
+            self.cycle_timers();
         }
     }
 
-    pub fn tick (&mut self, memory: &mut Memory, display: &mut Display, keypad: &Keypad) -> Instruction {
+    pub fn cycle (&mut self, memory: &mut Memory, display: &mut Display, keypad: &Keypad) -> Instruction {
         let instruction = memory.fetch(self.pc as usize);
         let nibbles = (
             (instruction.opcode & 0xF000) >> 12,
@@ -186,6 +161,16 @@ impl Cpu {
         }
 
         return instruction;
+    }
+
+    pub fn cycle_timers (&mut self) {
+        if self.dt > 0 {
+            self.dt -= 1;
+        }
+        
+        if self.st > 0 {
+            self.st -= 1;
+        }
     }
 
     pub fn beep (&self) -> bool {

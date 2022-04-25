@@ -13,6 +13,8 @@ pub struct CpuDebug {
     sp: usize,
     dt: u8,
     st: u8,
+    rate: f64,
+    cycles: usize,
 }
 
 impl Probe<CpuDebug> for Cpu {
@@ -25,6 +27,8 @@ impl Probe<CpuDebug> for Cpu {
             sp: self.sp,
             dt: self.dt,
             st: self.st,
+            rate: self.clock.rate,
+            cycles: self.clock.cycles,
         }
     }
 }
