@@ -1,7 +1,7 @@
 use serde::Serialize;
 use crate::{
     debug::Probe,
-    cpu::{Cpu, log::Log},
+    cpu::Cpu,
 };
 
 #[derive(Serialize)]
@@ -17,7 +17,6 @@ pub struct CpuDebug {
     rate_timer: f64,
     cycles: usize,
     cycles_timer: usize,
-    logs: Vec<Log>,
 }
 
 impl Probe<CpuDebug> for Cpu {
@@ -34,7 +33,6 @@ impl Probe<CpuDebug> for Cpu {
             rate_timer: self.clock_timer.rate,
             cycles: self.clock.cycles,
             cycles_timer: self.clock_timer.cycles,
-            logs: self.logs.clone(),
         }
     }
 }

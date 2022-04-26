@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 import Statistics from 'game-stats/lib/interfaces/Statistics';
 
 import wasm from '../backend/pkg/index_bg.wasm';
-import initWasm, { Emulator, set_panic_hook } from '../backend/pkg';
+import initWasm, { Emulator, set_panic_hook, set_logger } from '../backend/pkg';
 import { useAudio, useAnimationFrame } from './hooks';
 
 export type Button = (
@@ -25,6 +25,7 @@ interface IEmulatorContext {
     debug: {
         emulator: ReturnType<Emulator['get_debug']>;
         performance: Statistics;
+        logs: object[];
     };
     error?: Error;
     status: Status;
@@ -37,7 +38,8 @@ interface IEmulatorContext {
     destroy (): void;
 }
 
-export const EmulatorContext = createContext<IEmulatorContext>(null);
+const EmulatorContext = createContext<IEmulatorContext>(null);
+const logs = [];
 
 /**
  * Provides emulator with core functionality
@@ -65,6 +67,7 @@ export const EmulatorProvider = ({ children }) => {
             setDebug(() => ({
                 emulator: emulator.get_debug(),
                 performance: raf.stats.stats(),
+                logs,
             }));
         } catch (err) {
             stop(err);
@@ -122,6 +125,20 @@ export const EmulatorProvider = ({ children }) => {
             setDebug(null);
         }
     }, [emulator]);
+
+    // Initialize
+    useEffect(() => {
+        (async () => {
+            const instance = await initWasm(wasm);
+    
+            set_panic_hook();
+            set_logger((log) => {
+                logs.push(log);
+            });
+
+            return instance;
+        })().then((instance) => console.log(`CHIP-8 initialized`, instance)).catch(console.error);
+    }, []);
     
     return (
         <EmulatorContext.Provider value={{
@@ -172,15 +189,8 @@ export const useDebug = () => {
     const { debug } = useContext(EmulatorContext);
 
     return {
+        logs: debug?.logs,
         emulator: debug?.emulator,
         performance: debug?.performance,
     };
-};
-
-export const init = async () => {
-    const instance = await initWasm(wasm);
-
-    set_panic_hook();
-
-    return instance;
 };

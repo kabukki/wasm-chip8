@@ -4,16 +4,12 @@ use crate::{
     display::Display,
     keypad::Keypad,
     clock::ClockDivider,
-    cpu::{
-        instruction::Instruction,
-        log::Log,
-    },
+    cpu::instruction::Instruction,
 };
 
 pub mod debug;
 pub mod instruction;
 pub mod disassembly;
-pub mod log;
 
 pub struct Cpu {
     v: [u8; 16],
@@ -25,7 +21,6 @@ pub struct Cpu {
     st: u8,
     pub clock: ClockDivider,
     pub clock_timer: ClockDivider,
-    logs: Vec<Log>,
 }
 
 impl Cpu {
@@ -40,7 +35,6 @@ impl Cpu {
             st: 0,
             clock: ClockDivider::new(crate::clock::CLOCK_CPU),
             clock_timer: ClockDivider::new(crate::clock::CLOCK_TIMER),
-            logs: Vec::new(),
         };
     }
     
@@ -56,18 +50,10 @@ impl Cpu {
 
     pub fn cycle (&mut self, memory: &mut Memory, display: &mut Display, keypad: &Keypad) -> Instruction {
         let instruction = memory.fetch(self.pc as usize);
+        let disassembly = disassembly::Disassembly::new(instruction.clone(), self.pc);
 
-        self.logs.insert(0, Log {
-            cycles: self.clock.cycles,
-            disassembly: disassembly::Disassembly::new(instruction.clone(), self.pc),
-            pc: self.pc,
-            sp: self.sp,
-            dt: self.dt,
-            st: self.st,
-            v: self.v,
-            i: self.i,
-        });
-        self.logs.truncate(40);
+        log::trace!("{:04X} {:04X} {:16} V:{:?} I:{:03X} SP:{:02} DT:{:02} ST:{:02} CYC:{}", self.pc, instruction.opcode, disassembly.string, self.v, self.i, self.sp, self.dt, self.st, self.clock.cycles);
+
         self.pc += 2;
 
         let nibbles = (

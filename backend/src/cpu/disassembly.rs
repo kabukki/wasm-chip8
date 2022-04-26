@@ -5,9 +5,9 @@ use crate::{
 
 #[derive(Serialize, Clone)]
 pub struct Disassembly {
-    address: u16,
-    opcode: String,
-    string: String,
+    pub address: u16,
+    pub opcode: String,
+    pub string: String,
 }
 
 impl Disassembly {
