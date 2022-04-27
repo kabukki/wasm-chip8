@@ -50,10 +50,9 @@ impl Cpu {
 
     pub fn cycle (&mut self, memory: &mut Memory, display: &mut Display, keypad: &Keypad) -> Instruction {
         let instruction = memory.fetch(self.pc as usize);
-        let disassembly = disassembly::Disassembly::new(instruction.clone(), self.pc);
 
-        log::trace!("{:04X} {:04X} {:16} V:{:?} I:{:03X} SP:{:02} DT:{:02} ST:{:02} CYC:{}", self.pc, instruction.opcode, disassembly.string, self.v, self.i, self.sp, self.dt, self.st, self.clock.cycles);
-
+        // Log state after fetch step
+        self.log(&instruction);
         self.pc += 2;
 
         let nibbles = (
@@ -179,5 +178,22 @@ impl Cpu {
 
     pub fn beep (&self) -> bool {
         return self.st > 0;
+    }
+
+    fn log (&self, instruction: &Instruction) {
+        let disassembly = disassembly::Disassembly::new(instruction, self.pc);
+
+        log::trace!(
+            "{:04X} {:04X} {:16} V[{}] I:{:03X} SP:{:02} DT:{:02} ST:{:02} CYC:{}",
+            self.pc,
+            instruction.opcode,
+            disassembly.string,
+            &self.v.iter().enumerate().map(|(n, v)| format!("{:X}:{:02X}", n, v)).collect::<Vec<String>>().join(","),
+            self.i,
+            self.sp,
+            self.dt,
+            self.st,
+            self.clock.cycles,
+        );
     }
 }

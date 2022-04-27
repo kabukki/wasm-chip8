@@ -10,7 +10,6 @@ edition = "2018"
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 serde = { version = "1.0", features = ["derive"] }
 js-sys = "0.3.51"
-console_error_panic_hook = "0.1.6"
 log = { version = "0.4.16", features = ["std"] }
 
 # https://doc.rust-lang.org/reference/linkage.html

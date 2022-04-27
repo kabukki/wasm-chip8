@@ -11,7 +11,7 @@ pub struct Disassembly {
 }
 
 impl Disassembly {
-    pub fn new (instruction: Instruction, address: u16) -> Self {
+    pub fn new (instruction: &Instruction, address: u16) -> Self {
         let nibbles = (
             (instruction.opcode & 0xF000) >> 12,
             (instruction.opcode & 0x0F00) >> 8,

@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 import Statistics from 'game-stats/lib/interfaces/Statistics';
 
 import wasm from '../backend/pkg/index_bg.wasm';
-import initWasm, { Emulator, set_panic_hook, set_logger } from '../backend/pkg';
+import initWasm, { Emulator, set_logger, set_panic_hook } from '../backend/pkg';
 import { useAudio, useAnimationFrame } from './hooks';
 
 export type Button = (
@@ -64,13 +64,15 @@ export const EmulatorProvider = ({ children }) => {
             }
 
             setFrame(new ImageData(new Uint8ClampedArray(emulator.get_framebuffer()), 64, 32));
-            setDebug(() => ({
+            setDebug({
                 emulator: emulator.get_debug(),
                 performance: raf.stats.stats(),
                 logs,
-            }));
+            });
         } catch (err) {
             stop(err);
+            // At this point, we can't get any debug info, but we can still provide the logs to help understand the error.
+            setDebug((previous) => ({ ...previous, logs }));
         }
     };
 
@@ -85,7 +87,6 @@ export const EmulatorProvider = ({ children }) => {
             setEmulator(emulator);
         } catch (err) {
             console.error(err);
-            setError(err);
         }
     };
 
@@ -100,7 +101,6 @@ export const EmulatorProvider = ({ children }) => {
         raf.stop();
         if (error && error instanceof Error) {
             console.error(error);
-            setError(error);
             setStatus(Status.ERROR);
         } else {
             setStatus(Status.IDLE);
@@ -131,10 +131,8 @@ export const EmulatorProvider = ({ children }) => {
         (async () => {
             const instance = await initWasm(wasm);
     
-            set_panic_hook();
-            set_logger((log) => {
-                logs.push(log);
-            });
+            set_panic_hook((message) => setError(new Error(message)));
+            set_logger((log) => logs.push(log));
 
             return instance;
         })().then((instance) => console.log(`CHIP-8 initialized`, instance)).catch(console.error);

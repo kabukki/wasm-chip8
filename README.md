@@ -21,7 +21,7 @@ Wrap your application in the `EmulatorProvider`, and consume it through the prov
 ```jsx
 import React, { useRef }from 'react';
 import { render } from 'react-dom';
-import { init, EmulatorProvider, useIO, useLifecycle } from '@kabukki/wasm-chip8';
+import { EmulatorProvider, useIO, useLifecycle } from '@kabukki/wasm-chip8';
 
 export const App = () => {
     const canvas = useRef(null);
@@ -47,31 +47,29 @@ export const App = () => {
     );
 };
 
-init().then(() => render(
+render(
     <EmulatorProvider>
         <App />
     </EmulatorProvider>,
     document.querySelector('#app'),
-)).catch(console.error);
+);
 ```
-
-### `init`
-
-The `init` function is essential to instantiate the emulator because it sets up the WebAssembly module to be used. Call it as soon as you want to use the library.
 
 ### `EmulatorProvider`
 
-Wrap your app with this provider at the highest level where you want to use the emulator. It contains an emulator instance and internal logic that you can access in child components. Under the hood, a context is created but only accessible through hooks to maintain coherence in the exposed API.
+Wrap your app with this provider at the highest level where you want to use the emulator. Internally, it sets up the WebAssembly module to be used, contains an emulator instance and internal logic that you can access in child components. Under the hood, a context is created but only accessible through hooks to maintain coherence in the exposed API.
 
 ### `useLifecycle`
 
 This hook provides insight and functionality to control the emulator's lifecycle.
 
 - `create` create a new emulator with the provided ROM loaded into memory, and automatically start it
+- `cycleCpu` runs a single CPU cycle (~1/500s)
+- `cycleTimer` runs a single timer cycle (~1/60s)
 - `start` resume emulator execution
 - `stop` stop emulator execution
 - `destroy` destroys the emulator instance
-- `error` error thrown during emulator execution, if any
+- `error` error that caused a `panic!` during execution, if any
 - `status` current emulator status
     - `Status.NONE` no emulator instance
     - `Status.RUNNING` emulator is running
@@ -90,8 +88,8 @@ This hook provides functionality to interact with input and output interfaces.
 
 This hook provides various information regarding emulation status.
 
-- `cpu` CPU state
-- `keypad` keypad state
+- `logs` emulator logs (nestest-style) produced through Rust's [log](https://crates.io/crates/log) facade.
+- `emulator` emulator state
 - `performance` measures of browser frame performance
 
 ## Resources
