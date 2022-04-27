@@ -6,7 +6,7 @@
     "dist/*"
   ],
   "scripts": {
-    "build:back": "cd backend && wasm-pack build --profiling --target web --out-name index",
+    "build:back": "cd backend && wasm-pack build --release --target web --out-name index",
     "build:front": "esbuild frontend/index.tsx --bundle --outdir=dist --sourcemap --format=esm --loader:.wasm=dataurl --external:react",
     "build": "npm run build:back && npm run build:front",
     "watch:back": "cd backend && cargo watch -i pkg -s 'wasm-pack build --profiling --target web --out-name index'",
