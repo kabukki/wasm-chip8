@@ -81,10 +81,7 @@ export const EmulatorProvider = ({ children }) => {
     
     const create = async (rom: Uint8Array) => {
         try {
-            const emulator = Emulator.new(rom);
-            setError(null);
-            setDebug(null);
-            setEmulator(emulator);
+            setEmulator(Emulator.new(rom));
         } catch (err) {
             console.error(err);
         }
@@ -123,6 +120,7 @@ export const EmulatorProvider = ({ children }) => {
         } else {
             setStatus(Status.NONE);
             setDebug(null);
+            setError(null);
         }
     }, [emulator]);
 
