@@ -9,7 +9,6 @@ use crate::{
 
 pub mod debug;
 pub mod instruction;
-pub mod disassembly;
 
 pub struct Cpu {
     v: [u8; 16],
@@ -181,14 +180,12 @@ impl Cpu {
     }
 
     fn log (&self, instruction: &Instruction) {
-        let disassembly = disassembly::Disassembly::new(instruction, self.pc);
-
         log::trace!(
-            "{:04X} {:04X} {:16} V[{}] I:{:03X} SP:{:02} DT:{:02} ST:{:02} CYC:{}",
+            "{:04X} {:04X} {:16} {} I:{:03X} SP:{:02} DT:{:02} ST:{:02} CYC:{}",
             self.pc,
             instruction.opcode,
-            disassembly.string,
-            &self.v.iter().enumerate().map(|(n, v)| format!("{:X}:{:02X}", n, v)).collect::<Vec<String>>().join(","),
+            instruction.disassembly,
+            &self.v.iter().enumerate().map(|(n, v)| format!("V{:X}:{:02X}", n, v)).collect::<Vec<String>>().join(" "),
             self.i,
             self.sp,
             self.dt,

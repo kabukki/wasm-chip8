@@ -12,6 +12,7 @@
     "watch:back": "cd backend && cargo watch -i pkg -s 'wasm-pack build --profiling --target web --out-name index'",
     "watch:front": "esbuild frontend/index.tsx --bundle --outdir=dist --sourcemap --format=esm --loader:.wasm=dataurl --external:react --watch",
     "watch": "concurrently -c red.bold,yellow.bold -n back,front npm:watch:back npm:watch:front",
+    "test:back": "cd backend && cargo test",
     "prepack": "npm run build"
   },
   "dependencies": {
