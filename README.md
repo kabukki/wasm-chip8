@@ -6,13 +6,21 @@ A **CHIP-8** emulator written in <img align="center" src="https://raw.githubuser
 
 ## Status
 
+### Timing
+
+The emulator synchronizes to video with the [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame) function, which usually matches the refresh rate of the display.
+- CPU runs at 500Hz
+- Timers run at 60Hz
+
+At every repaint, enough emulator cycles are run to simulate that the duration for one frame has passed. Given an ideal refresh rate of 60FPS, that is 1/60s.
+
 ### ASI
 
 ✅ All 35 opcodes are implemented.
 
 ### Known limitations
 
-*TODO*
+Extensions are not implemented.
 
 ## Usage
 
