@@ -88,7 +88,7 @@ This hook provides insight and functionality to control the emulator's lifecycle
 
 This hook provides functionality to interact with input and output interfaces.
 
-- `frame` the current video frame
+- `frame` the current video frame (64 x 32)
 - `audio` methods to control audio output
 - `input` send an input signal
 
