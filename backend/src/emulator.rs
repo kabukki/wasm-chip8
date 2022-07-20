@@ -19,17 +19,13 @@ pub struct Emulator {
 #[wasm_bindgen]
 impl Emulator {
     pub fn new (rom: &[u8]) -> Self {
-        let mut emulator = Self {
+        Self {
             cpu: Cpu::new(),
-            memory: Memory::new(),
+            memory: Memory::new(rom),
             display: Display::new(),
             keypad: Keypad::new(),
             clock: Clock::new(crate::clock::CLOCK_CPU),
-        };
-
-        emulator.memory.load(rom);
-
-        emulator
+        }
     }
 
     pub fn cycle (&mut self) {
@@ -37,7 +33,7 @@ impl Emulator {
             self.clock.time,
             &mut self.memory,
             &mut self.display,
-            &mut self.keypad,
+            &self.keypad,
         );
 
         self.clock.tick();

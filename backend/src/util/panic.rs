@@ -7,7 +7,7 @@ struct Logger {
 }
 
 impl Logger {
-    pub fn log (&self, info: &String) {
+    pub fn log (&self, info: &str) {
         self.callback.call1(&JsValue::null(), &JsValue::from_str(info)).unwrap();
     }
 }

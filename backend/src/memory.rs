@@ -10,19 +10,16 @@ pub struct Memory {
 }
 
 impl Memory {
-    pub fn new () -> Memory {
+    pub fn new (rom: &[u8]) -> Memory {
         let mut ram = [0; MEMORY_SIZE];
 
         // Store font sprites
         ram[RESERVED_START .. RESERVED_START + display::FONT_SET.len()].copy_from_slice(&display::FONT_SET);
+        ram[PROGRAM_START .. PROGRAM_START + rom.len()].copy_from_slice(rom);
 
         Memory {
             ram,
         }
-    }
-
-    pub fn load (&mut self, rom: &[u8]) {
-        self.ram[PROGRAM_START .. PROGRAM_START + rom.len()].copy_from_slice(&rom);
     }
 
     pub fn fetch (&self, at: u16) -> Instruction {

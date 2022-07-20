@@ -22,7 +22,7 @@ pub const FONT_SET: [u8; 80] = [
 ];
 
 fn at (x: usize, y: usize) -> usize {
-    return (x + y * DISPLAY_WIDTH) % (DISPLAY_WIDTH * DISPLAY_HEIGHT);
+    (x + y * DISPLAY_WIDTH) % (DISPLAY_WIDTH * DISPLAY_HEIGHT)
 }
 
 pub struct Display {
@@ -64,7 +64,7 @@ impl Display {
             }
         }
 
-        return collision;
+        collision
     }
 
     pub fn clear (&mut self) {

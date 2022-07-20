@@ -20,8 +20,8 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new () -> Cpu {
-        return Cpu {
+    pub fn new () -> Self {
+        Self {
             v: [0; 16],
             i: 0,
             pc: PROGRAM_START as u16,
@@ -31,7 +31,7 @@ impl Cpu {
             st: 0,
             clock: ClockDivider::new(crate::clock::CLOCK_CPU),
             clock_timer: ClockDivider::new(crate::clock::CLOCK_TIMER),
-        };
+        }
     }
     
     pub fn tick (&mut self, time: f64, memory: &mut Memory, display: &mut Display, keypad: &Keypad) {
@@ -69,9 +69,9 @@ impl Cpu {
             (0x6, _, _, _) => self.v[instruction.x] = instruction.nn,
             (0x7, _, _, _) => self.v[instruction.x] = self.v[instruction.x].wrapping_add(instruction.nn),
             (0x8, _, _, 0) => self.v[instruction.x] = self.v[instruction.y],
-            (0x8, _, _, 0x1) => self.v[instruction.x] = self.v[instruction.x] | self.v[instruction.y],
-            (0x8, _, _, 0x2) => self.v[instruction.x] = self.v[instruction.x] & self.v[instruction.y],
-            (0x8, _, _, 0x3) => self.v[instruction.x] = self.v[instruction.x] ^ self.v[instruction.y],
+            (0x8, _, _, 0x1) => self.v[instruction.x] |= self.v[instruction.y],
+            (0x8, _, _, 0x2) => self.v[instruction.x] &= self.v[instruction.y],
+            (0x8, _, _, 0x3) => self.v[instruction.x] ^= self.v[instruction.y],
             (0x8, _, _, 0x4) => {
                 let (res, overflow) = self.v[instruction.x].overflowing_add(self.v[instruction.y]);
                 self.v[0xF] = if overflow { 1 } else { 0 };
@@ -114,12 +114,12 @@ impl Cpu {
             (0xF, _, 0, 0x7) => self.v[instruction.x] = self.dt,
             (0xF, _, 0, 0xA) => {
                 // Check for key press, or loop back
-                let n = keypad.state.iter().position(|&key| key == true);
+                let n = keypad.state.iter().position(|&key| key);
 
-                if n.is_none() {
-                    self.pc -= 2;
+                if let Some(key) = n {
+                    self.v[instruction.x] = key as u8;
                 } else {
-                    self.v[instruction.x] = n.unwrap() as u8;
+                    self.pc -= 2;
                 }
             },
             (0xF, _, 0x1, 0x5) => {
@@ -152,7 +152,7 @@ impl Cpu {
             (..) => panic!("Unknown instruction {:02X}", instruction.opcode),
         }
 
-        return instruction;
+        instruction
     }
 
     pub fn cycle_timers (&mut self) {
@@ -166,7 +166,7 @@ impl Cpu {
     }
 
     pub fn beep (&self) -> bool {
-        return self.st > 0;
+        self.st > 0
     }
 
     fn log (&self, instruction: &Instruction) {
