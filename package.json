@@ -1,29 +1,26 @@
 {
   "name": "@kabukki/wasm-chip8",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "main": "dist/index.js",
   "files": [
     "dist/*"
   ],
   "scripts": {
     "build:back": "cd backend && wasm-pack build --release --target web --out-name index",
-    "build:front": "esbuild frontend/index.tsx --bundle --outdir=dist --sourcemap --format=esm --loader:.wasm=dataurl --external:react",
+    "build:front": "esbuild frontend/index.ts --bundle --outdir=dist --sourcemap --format=esm --loader:.wasm=dataurl --external:react",
     "build": "npm run build:back && npm run build:front",
     "watch:back": "cd backend && cargo watch -i pkg -s 'wasm-pack build --profiling --target web --out-name index'",
-    "watch:front": "esbuild frontend/index.tsx --bundle --outdir=dist --sourcemap --format=esm --loader:.wasm=dataurl --external:react --watch",
+    "watch:front": "esbuild frontend/index.ts --bundle --outdir=dist --sourcemap --format=esm --loader:.wasm=dataurl --external:react --watch",
     "watch": "concurrently -c red.bold,yellow.bold -n back,front npm:watch:back npm:watch:front",
     "test:back": "cd backend && cargo test",
+    "lint:back": "cd backend && cargo clippy",
     "prepack": "npm run build"
   },
   "dependencies": {
     "game-stats": "^0.1.1"
   },
   "devDependencies": {
-    "@types/react": "^17.0.43",
     "concurrently": "^7.0.0",
     "esbuild": "^0.13.15"
-  },
-  "peerDependencies": {
-    "react": "^17.0.2"
   }
 }

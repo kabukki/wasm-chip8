@@ -70,8 +70,4 @@ impl Display {
     pub fn clear (&mut self) {
         self.framebuffer = [false; VRAM_SIZE];
     }
-
-    pub fn size (&self) -> usize {
-        return self.framebuffer.len();
-    }
 }

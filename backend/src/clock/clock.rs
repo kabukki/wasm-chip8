@@ -1,6 +1,7 @@
 pub const CLOCK_CPU: f64    =   500.0;
 pub const CLOCK_TIMER: f64  =   60.0;
 
+#[derive(serde::Serialize)]
 pub struct Clock {
     pub rate: f64,
     pub time: f64,
@@ -29,6 +30,7 @@ impl Clock {
     }
 }
 
+#[derive(serde::Serialize)]
 pub struct ClockDivider {
     pub rate: f64,
     pub cycles: usize,

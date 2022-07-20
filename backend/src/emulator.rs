@@ -1,21 +1,19 @@
 use wasm_bindgen::prelude::*;
-use serde::Serialize;
 use crate::{
-    debug::Probe,
     display::Display,
-    memory::{Memory, debug::MemoryDebug},
-    cpu::{Cpu, debug::CpuDebug},
-    keypad::{Keypad, debug::KeypadDebug},
+    memory::Memory,
+    cpu::Cpu,
+    input::Keypad,
     clock::Clock,
 };
 
 #[wasm_bindgen]
 pub struct Emulator {
-    cpu: Cpu,
-    memory: Memory,
-    display: Display,
-    keypad: Keypad,
-    clock: Clock,
+    pub (crate) cpu: Cpu,
+    pub (crate) memory: Memory,
+    pub (crate) display: Display,
+    pub (crate) keypad: Keypad,
+    pub (crate) clock: Clock,
 }
 
 #[wasm_bindgen]
@@ -72,25 +70,4 @@ impl Emulator {
     pub fn get_framebuffer (&self) -> Vec<u8> {
         self.display.framebuffer.iter().flat_map(|&pixel| if pixel { [255, 255, 255, 255] } else { [0, 0, 0, 255] }).collect()
     }
-
-    /**
-     * Not implemented through Probe trait because impls are not yet supported by wasm-bindgen.
-     * https://github.com/rustwasm/wasm-bindgen/issues/2073
-     */
-    pub fn get_debug (&self) -> JsValue {
-        JsValue::from_serde(&Debug {
-            time: (self.clock.time * 1000.0) as usize,
-            cpu: self.cpu.get_debug(),
-            keypad: self.keypad.get_debug(),
-            memory: self.memory.get_debug(),
-        }).unwrap()
-    }
-}
-
-#[derive(Serialize)]
-pub struct Debug {
-    time: usize,
-    cpu: CpuDebug,
-    keypad: KeypadDebug,
-    memory: MemoryDebug,
 }

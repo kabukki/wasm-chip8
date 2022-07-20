@@ -8,6 +8,11 @@ pub struct Instruction {
     pub opcode: u16,
 
     /**
+     * Opcode split into 4x4 bits
+     */
+    pub nibbles: (u8, u8, u8, u8),
+
+    /**
      * A 12-bit value, the lowest 12 bits of the instruction
      */
     pub nnn: u16,
@@ -45,20 +50,21 @@ pub struct Instruction {
 impl Instruction {
     pub fn new (opcode: u16) -> Self {
         let nibbles = (
-            (opcode & 0xF000) >> 12,
-            (opcode & 0x0F00) >> 8,
-            (opcode & 0x00F0) >> 4,
-            (opcode & 0x000F),
+            ((opcode & 0xF000) >> 12) as u8,
+            ((opcode & 0x0F00) >> 8) as u8,
+            ((opcode & 0x00F0) >> 4) as u8,
+            (opcode & 0x000F) as u8,
         );
 
-        let nnn = (nibbles.1 << 8) | (nibbles.2 << 4) | nibbles.3;
-        let nn = ((nibbles.2 << 4) | nibbles.3) as u8;
+        let nnn = ((nibbles.1 as u16) << 8) | ((nibbles.2 as u16) << 4) | (nibbles.3 as u16);
+        let nn = (nibbles.2 << 4) | nibbles.3;
         let x = nibbles.1 as usize;
         let y = nibbles.2 as usize;
-        let n = nibbles.3 as u8;
+        let n = nibbles.3;
 
         Self {
             opcode,
+            nibbles,
             nnn,
             nn,
             x,

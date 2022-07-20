@@ -1,5 +1,3 @@
-pub mod debug;
-
 pub struct Keypad {
     pub state: [bool; 16],
 }
