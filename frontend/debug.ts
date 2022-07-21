@@ -20,33 +20,26 @@ class Memoizable {
     }
 }
 
-class Memory extends Memoizable {
-    constructor (vm: Emulator) {
-        super();
-        this.memoize('ram', () => vm.debug_memory_ram());
-    }
-}
-
-class Disassembly extends Memoizable {
+class DebugDisassembly extends Memoizable {
     constructor (private vm: Emulator) {
         super();
         this.memoize('total', () => vm.debug_disassembly_total());
     }
 
-    at (address) {
+    at (address: number) {
         return this.vm.debug_disassembly_at(address);
     }
 
-    address_to_index (address) {
+    addressToIndex (address: number) {
         return this.vm.debug_disassembly_address_to_index(address);
     }
 
-    index_to_address (index) {
+    indexToAddress (index: number) {
         return this.vm.debug_disassembly_index_to_address(index);
     }
 }
 
-class Cpu extends Memoizable {
+class DebugCpu extends Memoizable {
     constructor (vm: Emulator) {
         super();
         this.memoize('clock', () => vm.debug_cpu_clock());
@@ -64,10 +57,10 @@ class Cpu extends Memoizable {
 export class Debug extends Memoizable {
     constructor (vm: Emulator) {
         super();
-        this.memoize('cpu', () => new Cpu(vm));
-        this.memoize('disassembly', () => new Disassembly(vm));
-        this.memoize('memory', () => new Memory(vm));
-        this.memoize('clock', () => vm.debug_clock());
+        this.memoize('cpu', () => new DebugCpu(vm));
+        this.memoize('disassembly', () => new DebugDisassembly(vm));
+        this.memoize('memory', () => vm.debug_memory());
         this.memoize('input', () => vm.debug_input());
+        this.memoize('clock', () => vm.debug_clock());
     }
 }

@@ -1,10 +1,10 @@
 # 💾 CHIP-8
 
-A **CHIP-8** emulator written in <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/rust.svg"/> Rust, compiled to <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/wasm.svg"/> WebAssemly through [wasm-pack](https://github.com/rustwasm/wasm-pack), and exposed with <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/react.svg"/> React thanks to [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen).
+A **CHIP-8** emulator written in <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/rust.svg"/> Rust, compiled to <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/wasm.svg"/> WebAssemly through [wasm-pack](https://github.com/rustwasm/wasm-pack), and exposed with <img align="center" src="https://raw.githubusercontent.com/kabukki/kabukki/master/icons/ts.svg"/> Typescript thanks to [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen).
 
 > CHIP-8 is an interpreted programming language, developed by Joseph Weisbecker. It was initially used on the COSMAC VIP and Telmac 1800 8-bit microcomputers in the mid-1970s. CHIP-8 programs are run on a CHIP-8 virtual machine. It was made to allow video games to be more easily programmed for these computers.
 
-## Status
+## Overview
 
 ### Timing
 
@@ -22,83 +22,39 @@ At every repaint, enough emulator cycles are run to simulate that the duration f
 
 Extensions are not implemented.
 
+### Tests
+
+- [test_opcode](https://github.com/corax89/chip8-test-rom) ✅
+- [chiptest](https://github.com/corax89/chip8-test-rom) ✅
+- [chiptest-mini](https://github.com/corax89/chip8-test-rom) ✅
+
 ## Usage
 
-Wrap your application in the `EmulatorProvider`, and consume it through the provided hooks.
+### Sample code
 
-```jsx
-import React, { useRef }from 'react';
-import { render } from 'react-dom';
-import { EmulatorProvider, useIO, useLifecycle } from '@kabukki/wasm-chip8';
+```js
+import { Chip8 } from '@kabukki/wasm-chip8';
 
-export const App = () => {
-    const canvas = useRef(null);
-    const { frame } = useIO();
-    const { create } = useLifecycle();
+const canvas = document.querySelector('canvas');
+canvas.width = Chip8.VIDEO_WIDTH;
+canvas.height = Chip8.VIDEO_HEIGHT;
 
-    const onChange = async (e) => {
-        create(new Uint8Array(await e.target.files[0]?.arrayBuffer()));
-        e.preventDefault();
-    };
-
-    useEffect(() => {
-        if (frame) {
-            canvas.current.getContext('2d').putImageData(frame, 0, 0);
-        }
-    }, [frame]);
-
-    return (
-        <main>
-            <input type="file" onChange={onChange} />
-            <canvas ref={canvas} width={frame?.width} height={frame?.height} />
-        </main>
-    );
-};
-
-render(
-    <EmulatorProvider>
-        <App />
-    </EmulatorProvider>,
-    document.querySelector('#app'),
-);
+const input = document.querySelector('input');
+input.addEventListener('change', async (e) => {
+    try {
+        const rom = new Uint8Array(await e.target.files[0]?.arrayBuffer());
+        const emulator = await Chip8.new(rom)
+        emulator.canvas = canvas;
+        emulator.start();
+    } catch (err) {
+        console.error(err);
+    }
+});
 ```
 
-### `EmulatorProvider`
+### API
 
-Wrap your app with this provider at the highest level where you want to use the emulator. Internally, it sets up the WebAssembly module to be used, contains an emulator instance and internal logic that you can access in child components. Under the hood, a context is created but only accessible through hooks to maintain coherence in the exposed API.
-
-### `useLifecycle`
-
-This hook provides insight and functionality to control the emulator's lifecycle.
-
-- `create` create a new emulator with the provided ROM loaded into memory, and automatically start it
-- `cycleCpu` runs a single CPU cycle (~1/500s)
-- `cycleTimer` runs a single timer cycle (~1/60s)
-- `start` resume emulator execution
-- `stop` stop emulator execution
-- `destroy` destroys the emulator instance
-- `error` error that caused a `panic!` during execution, if any
-- `status` current emulator status
-    - `Status.NONE` no emulator instance
-    - `Status.RUNNING` emulator is running
-    - `Status.IDLE` emulator is paused
-    - `Status.ERROR` emulator encountered an error
-
-### `useIO`
-
-This hook provides functionality to interact with input and output interfaces.
-
-- `frame` the current video frame (64 x 32)
-- `audio` methods to control audio output
-- `input` send an input signal
-
-### `useDebug`
-
-This hook provides various information regarding emulation status.
-
-- `logs` emulator logs (nestest-style) produced through Rust's [log](https://crates.io/crates/log) facade.
-- `emulator` emulator state
-- `performance` measures of browser frame performance
+The full API is documented on the [wiki](https://github.com/kabukki/wasm-chip8/wiki/API)!
 
 ## Resources
 
@@ -135,3 +91,4 @@ This hook provides various information regarding emulation status.
 - https://github.com/corax89/chip8-test-rom
 - https://github.com/badlogic/chip8/tree/master/roms
 - https://johnearnest.github.io/chip8Archive/
+- https://github.com/offstatic/chiptest

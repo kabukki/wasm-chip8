@@ -110,7 +110,7 @@ export class Chip8 {
         this.canvas?.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(this.#vm.get_framebuffer()), Chip8.VIDEO_WIDTH, Chip8.VIDEO_HEIGHT), 0, 0);
     }
 
-    input (key, state) {
+    input (key: Button, state: boolean) {
         this.#vm.update_key(key, state);
     }
 

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+    <body>
+        <canvas style="display: block; width: 100%; aspect-ratio: 64 / 32; image-rendering: pixelated"></canvas>
+        <input type="file" />
+        <script type="module">
+            import { Chip8 } from '@kabukki/wasm-chip8';
+
+            const canvas = document.querySelector('canvas');
+            canvas.width = Chip8.VIDEO_WIDTH;
+            canvas.height = Chip8.VIDEO_HEIGHT;
+
+            const input = document.querySelector('input');
+            input.addEventListener('change', async (e) => {
+                try {
+                    const rom = new Uint8Array(await e.target.files[0]?.arrayBuffer());
+                    const emulator = await Chip8.new(rom)
+                    emulator.canvas = canvas;
+                    emulator.start();
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+        </script>
+    </body>
+</html>
